@@ -1,0 +1,11 @@
+# Allow all crawlers to access the landing page
+User-agent: *
+Allow: /
+
+# Disallow specific files or directories (optional, examples)
+Disallow: /assets/private/
+Disallow: /*.log$  # Blocks log files
+Disallow: /tracking/  # Blocks tracking scripts or folders, if any
+
+# Sitemap reference (optional, include if you have one)
+#Sitemap: https://yourlandingpage.com/sitemap.xml

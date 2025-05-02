@@ -4,14 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-		<title>CoinDrop  Earn Cryptocurrency Daily – Join the Airdrop Revolution!</title>
+    <title>CoinDrop: Earn Crypto with Daily Airdrops & Rewards</title>
     
-		<meta name="description" content="Unlock daily crypto rewards with CoinDrop, the ultimate airdrop platform! Discover decentralized finance opportunities and maximize your crypto earnings today.">
+    <meta name="description" content="Join CoinDrop to earn cryptocurrency through daily airdrops and tasks. Discover decentralized finance opportunities and maximize your crypto rewards today.">
+    
+    <meta property="og:title" content="CoinDrop: Earn Crypto Daily with Airdrops">
+    <meta property="og:description" content="Join CoinDrop to earn cryptocurrency through daily airdrops and tasks.">
+    <meta property="og:image" content="../assets/coindrop/coindrop_logo.png">
+    
+    <link rel="icon" type="image/x-icon" href="../assets/coindrop/coindrop_logo.png">
+    <link rel="apple-touch-icon" href="../assets/coindrop/coindrop_logo.png">
+
     <link rel="stylesheet" href="../stylesheets/coindropstyle.css">
 
-		<script src="https://kit.fontawesome.com/363890c876.js" crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/363890c876.js" crossorigin="anonymous"></script>
 
-		<!-- Google tag (gtag.js) -->
+    <!-- Google tag (gtag.js) -->
 		<script async src="https://www.googletagmanager.com/gtag/js?id=AW-16967838342"></script>
 		<script>
 			window.dataLayer = window.dataLayer || [];
@@ -34,93 +42,122 @@ In your html page, add the snippet and call gtag_report_conversion when someone 
 						'event_callback': callback
 				});
 				return false;
+			}	
+			function gtag_report_premium_conversion(url) {
+				var callback = function () {
+					if (typeof(url) != 'undefined') {
+						window.location = url;
+					}
+				};
+				gtag('event', 'conversion', {
+						'send_to': 'AW-16967838342/xeVFCLWZrbkaEIbV8po_',
+						'event_callback': callback
+				});
+				return false;
 			}
 		</script>
 </head>
 <body>
-		<div id="nav-wrapper">
-				<h2>CoinDrop</h2>
-				<a href="https://explorer.solana.com/address/mntq6hnGWU9761TRZdzeAkhTmAuTUKRQqZe1D7787UV" target="_blank"><h5>Mint Addres: mntq6hnGWU9761TRZdzeAkhTmAuTUKRQqZe1D7787UV</h5></a>
-		</div>
+    <div id="nav-wrapper">
+        <h2>CoinDrop</h2>
+        <a href="https://explorer.solana.com/address/mntq6hnGWU9761TRZdzeAkhTmAuTUKRQqZe1D7787UV" target="_blank"><h5>Mint Address: mntq6hnGWU9761TRZdzeAkhTmAuTUKRQqZe1D7787UV</h5></a>
+    </div>
 
-		<div id="top-container">
-				<div id="screenshot-wrapper">
-						<img id="home-screenshot" src="../assets/coindrop/coindrop_home_screenshot.png">
-						<div id="bg-screenshot-wrapper">
-								<img class="bg-screenshots" src="../assets/coindrop/coindrop_membership_screenshot.png">
-								<img class="bg-screenshots" src="../assets/coindrop/coindrop_store_screenshot.png">
-						</div>
-				</div>
+		<center>
+    		<h1>Earn Crypto Daily with CoinDrop Airdrops</h1>
+    		<h3>Warning! This is an Airdrop app, not a quick money app.<br>You can withdraw your earnings on July 5, 2026, when the coin is distributed.</h3>
+		</center>
 
-				<button onclick="openGooglePlayStore(); gtag_report_conversion()">Download <i class="fa-brands fa-google-play"></i></button>
-		</div>
+    <div id="top-container">
+        <div id="screenshot-wrapper">
+            <img id="home-screenshot" alt="CoinDrop App Home Page for Crypto Airdrops" src="../assets/coindrop/coindrop_home_screenshot.png">
+            <div id="bg-screenshot-wrapper">
+                <img class="bg-screenshots" alt="CoinDrop Membership Page for Crypto Rewards" src="../assets/coindrop/coindrop_membership_screenshot.png">
+                <img class="bg-screenshots" alt="CoinDrop Store Page for Airdrop Earnings" src="../assets/coindrop/coindrop_store_screenshot.png">
+            </div>
+        </div>
 
-		<div id="middle-container">
-				<h2>The ultimate airdrop app.</h2>
-				<h4>Crypto earnings at your fingertips!</h4>	
+        <button onclick="openGooglePlayStore(); gtag_report_conversion()">Google Play Store <i class="fa-brands fa-google-play"></i></button>
+        <!--<button onclick="openAmazonStore(); gtag_report_conversion()">Amazon Store <i class="fa-brands fa-amazon"></i></button>-->
+				<!-- Social Sharing Widgets -->
+        <div class="social-share">
+            <a href="https://x.com/share?url=YOUR_PAGE_URL" target="_blank"><i class="fa-brands fa-x"></i> Share on X</a>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=YOUR_PAGE_URL" target="_blank"><i class="fa-brands fa-facebook"></i> Share on Facebook</a>
+        </div>
+    </div>
 
-				<div class="feature-wrapper">
-						<div class="feature-container">
-							<img src="../assets/coindrop/button_thumb.jpg">
-							<h4>Press a button.</h4>
-						</div>
-						<div class="feature-container">
-							<img src="../assets/coindrop/tasks_thumb.jpg">
-							<h4>Complete simple tasks.</h4>
-						</div>
-				</div>
-				<div class="feature-wrapper">
-						<div class="feature-container">
-							<img src="../assets/coindrop/contribute_thumb.jpg">
-							<h4>Contribute to development.</h4>
-						</div>
-						<div class="feature-container">
-							<img src="../assets/coindrop/referrals_thumb.jpg">
-							<h4>Refer your friends.</h4>
-						</div>
-				</div>
+    <div id="middle-container">
+        <h2>The Ultimate Airdrop App</h2>
+        <h4>Crypto earnings at your fingertips!</h4>   
 
-				<button onclick="openGooglePlayStore(); gtag_report_conversion()">Get Access Now!</button>
-		</div>
+        <p style="width:75vw;text-align:center;">CoinDrop is the leading airdrop platform for earning cryptocurrency effortlessly. Whether you're new to decentralized finance (DeFi) or a seasoned crypto enthusiast, CoinDrop lets you build your $DROP portfolio by completing simple tasks, referring friends, or upgrading to Premium for higher rewards. Join now and start earning crypto daily, with distributions on July 5, 2026.</p>
+				<br>
 
-		<div id="bottom-container">
-				<h2>Build a high value portfolio with CoinDrop.</h2>
+        <div class="feature-wrapper">
+            <div class="feature-container">
+                <img alt="Button Click Feature for CoinDrop Airdrops" src="../assets/coindrop/button_thumb.jpg">
+                <h4>Click to Earn</h4>
+            </div>
+            <div class="feature-container">
+                <img alt="Tasks Feature for CoinDrop Crypto Rewards" src="../assets/coindrop/tasks_thumb.jpg">
+                <h4>Complete Simple Tasks</h4>
+            </div>
+        </div>
+        <div class="feature-wrapper">
+            <div class="feature-container">
+                <img alt="Contribute Feature for CoinDrop Development" src="../assets/coindrop/contribute_thumb.jpg">
+                <h4>Contribute to Development</h4>
+            </div>
+            <div class="feature-container">
+                <img alt="Referrals Feature for CoinDrop Earnings" src="../assets/coindrop/referrals_thumb.jpg">
+                <h4>Refer Your Friends</h4>
+            </div>
+        </div>
 
-				<h1>Membership</h1>
-				<h5>More perks coming soon!</h5>
-				<div id="membership-wrapper">
-						<div class="plan-container">
-								<h3>Free</h3>
-								<hr>
-								<ul>
-										<li><b>1x</b> button click rewards.</li>
-										<li><b>1x</b> task rewards.</li>
-										<li><b>1x</b> referral rewards.</li>
-										<li><b>$DROP</b> airdrop on <b>05 July 2026</b>.</li>
-										<li><b>No</b> airdrop of a secondary on <b>05 July 2026</b>.</li>
-										<li><b>3 second</b> energy recovery.</li>
-								</ul>
-								<button onclick="openGooglePlayStore(); gtag_report_conversion()">Download</button>
-						</div>
-						<div class="plan-container">
-								<h3>Premium</h3>
-								<hr>
-								<ul>
-										<li><b>100x</b> button click rewards.</li>
-										<li><b>100x</b> task rewards.</li>
-										<li><b>100x</b> referral rewards.</li>
-										<li><b>$DROP</b> airdrop on <b>05 July 2026</b>.</li>
-										<li><b>1:1</b> airdrop of a secondary token on <b>05 July 2026</b>.</li>
-										<li><b>Infinite</b> energy, no need for recovery.</li>
-								</ul>
-								<button onclick="openGooglePlayStore(); gtag_report_conversion()">Let's Go!</button>
-						</div>
-				</div>
-		</div>
+        <button onclick="openGooglePlayStore(); gtag_report_conversion()">Get Access Now!</button>
+    </div>
 
-		<h4 id="credits">created by <a href="https://gspteck.com">gspteck</a>.</h4>
+    <div id="bottom-container">
+        <h2>Build a High-Value Crypto Portfolio</h2>
+				
+				<center>
+        		<p style="width:75vw;">With CoinDrop, you can grow your cryptocurrency holdings through daily airdrops and exclusive perks. Choose between our Free or Premium plans to start earning $DROP tokens, with more features coming soon.</p>
+        </center>
+
+        <h3>The Best VIP Membership</h3>
+        <h5>More perks coming soon!</h5>
+        <div id="membership-wrapper">
+            <div class="plan-container">
+                <h3>Free</h3>
+                <hr>
+                <ul>
+                    <li><b>Standard</b> button click rewards.</li>
+                    <li><b>Standard</b> task rewards.</li>
+                    <li><b>Standard</b> referral rewards.</li>
+                    <li><b>$DROP</b> airdrop on <b>July 5, 2026</b>.</li>
+                    <li><b>No</b> secondary token airdrop on <b>July 5, 2026</b>.</li>
+                    <li><b>3-second</b> energy recovery.</li>
+                </ul>
+                <button onclick="openGooglePlayStore(); gtag_report_conversion()">Download</button>
+            </div>
+            <div class="plan-container">
+                <h3>Premium</h3>
+                <hr>
+                <ul>
+                    <li><b>100x</b> button click rewards.</li>
+                    <li><b>100x</b> task rewards.</li>
+                    <li><b>100x</b> referral rewards.</li>
+                    <li><b>$DROP</b> airdrop on <b>July 5, 2026</b>.</li>
+                    <li><b>1:1</b> secondary token airdrop on <b>July 5, 2026</b>.</li>
+                    <li><b>Infinite</b> energy, no recovery needed.</li>
+                </ul>
+                <button onclick="openGooglePlayStore(); gtag_report_premium_conversion()">Let's Go!</button>
+            </div>
+        </div>
+    </div>
+
+    <h4 id="credits">Created by <a href="https://gspteck.com">gspteck</a>.</h4>
           
     <script src="../scripts/coindropscript.js"></script>
 </body>
 </html>
-

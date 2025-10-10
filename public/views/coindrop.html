@@ -17,9 +17,9 @@
 
     <link rel="stylesheet" href="../stylesheets/coindropstyle.css">
 
-    <script src="https://kit.fontawesome.com/363890c876.js" crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/363890c876.js" crossorigin="anonymous"></script>	
 
-    <!-- Google tag (gtag.js) -->
+    <!-- Google tag (gtag.js -->
 		<script async src="https://www.googletagmanager.com/gtag/js?id=AW-16967838342"></script>
 		<script>
 			window.dataLayer = window.dataLayer || [];
@@ -32,28 +32,43 @@
 In your html page, add the snippet and call gtag_report_conversion when someone clicks on the chosen link or button. -->
 		<script>
 			function gtag_report_conversion(url) {
-				var callback = function () {
-					if (typeof(url) != 'undefined') {
-						window.location = url;
-					}
-				};
-				gtag('event', 'conversion', {
+				const urlParams = new URLSearchParams(window.location.search);
+				const utmSource = urlParams.get('utm_source');
+
+				// Check if utm_source exists and equals 'google'
+				if (utmSource && utmSource.toLowerCase() === 'google') {
+					var callback = function () {
+						if (typeof(url) != 'undefined') {
+							window.location = url;
+						}
+					};
+					gtag('event', 'conversion', {
 						'send_to': 'AW-16967838342/nnhRCM6dnbcaEIbV8po_',
 						'event_callback': callback
-				});
-				return false;
-			}	
+					});
+					return false;
+				}
+				return true; // Return true if condition is not met
+			}
+
 			function gtag_report_premium_conversion(url) {
-				var callback = function () {
-					if (typeof(url) != 'undefined') {
-						window.location = url;
-					}
-				};
-				gtag('event', 'conversion', {
+				const urlParams = new URLSearchParams(window.location.search);
+				const utmSource = urlParams.get('utm_source');
+
+				// Check if utm_source exists and equals 'google'
+				if (utmSource && utmSource.toLowerCase() === 'google') {
+					var callback = function () {
+						if (typeof(url) != 'undefined') {
+							window.location = url;
+						}
+					};
+					gtag('event', 'conversion', {
 						'send_to': 'AW-16967838342/xeVFCLWZrbkaEIbV8po_',
 						'event_callback': callback
-				});
-				return false;
+					});
+					return false;
+				}
+				return true; // Return true if condition is not met
 			}
 		</script>
 </head>
@@ -65,7 +80,6 @@ In your html page, add the snippet and call gtag_report_conversion when someone 
 
 		<center>
     		<h1>Earn Crypto Daily with CoinDrop Airdrops</h1>
-    		<h3>Warning! This is an Airdrop app, not a quick money app.<br>You can withdraw your earnings on July 5, 2026, when the coin is distributed.</h3>
 		</center>
 
     <div id="top-container">
@@ -155,6 +169,8 @@ In your html page, add the snippet and call gtag_report_conversion when someone 
             </div>
         </div>
     </div>
+
+		<center><button style="scale:0.25" onclick="window.open('https://x.com/coindropapp')"><img src="../assets/x-twitter.svg"></button></center>
 
     <h4 id="credits">Created by <a href="https://gspteck.com">gspteck</a>.</h4>
           

@@ -1,179 +1,218 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>CoinDrop: Earn Crypto with Daily Airdrops & Rewards</title>
-    
-    <meta name="description" content="Join CoinDrop to earn cryptocurrency through daily airdrops and tasks. Discover decentralized finance opportunities and maximize your crypto rewards today.">
-    
-    <meta property="og:title" content="CoinDrop: Earn Crypto Daily with Airdrops">
-    <meta property="og:description" content="Join CoinDrop to earn cryptocurrency through daily airdrops and tasks.">
-    <meta property="og:image" content="../assets/coindrop/coindrop_logo.png">
-    
-    <link rel="icon" type="image/x-icon" href="../assets/coindrop/coindrop_logo.png">
-    <link rel="apple-touch-icon" href="../assets/coindrop/coindrop_logo.png">
 
-    <link rel="stylesheet" href="../stylesheets/coindropstyle.css">
+    <meta
+      name="description"
+      content="Join CoinDrop to earn cryptocurrency through daily airdrops and tasks. Discover decentralized finance opportunities and maximize your crypto rewards today."
+    />
 
-    <script src="https://kit.fontawesome.com/363890c876.js" crossorigin="anonymous"></script>	
+    <meta
+      property="og:title"
+      content="CoinDrop: Earn Crypto Daily with Airdrops"
+    />
+    <meta
+      property="og:description"
+      content="Join CoinDrop to earn cryptocurrency through daily airdrops and tasks."
+    />
+    <meta property="og:image" content="../assets/coindrop/coindrop_logo.png" />
+
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="../assets/coindrop/coindrop_logo.png"
+    />
+    <link rel="apple-touch-icon" href="../assets/coindrop/coindrop_logo.png" />
+
+    <link rel="stylesheet" href="../stylesheets/coindropstyle.css" />
+
+    <script
+      src="https://kit.fontawesome.com/363890c876.js"
+      crossorigin="anonymous"
+    ></script>
 
     <!-- Google tag (gtag.js -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=AW-16967838342"></script>
-		<script>
-			window.dataLayer = window.dataLayer || [];
-			function gtag(){dataLayer.push(arguments);}
-			gtag('js', new Date());
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=AW-16967838342"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
 
-			gtag('config', 'AW-16967838342');
-		</script>
-		<!-- Event snippet for CoinDrop Landing Page Download Button Conversion conversion page
+      gtag("config", "AW-16967838342");
+    </script>
+    <!-- Event snippet for CoinDrop Landing Page Download Button Conversion conversion page
 In your html page, add the snippet and call gtag_report_conversion when someone clicks on the chosen link or button. -->
-		<script>
-			function gtag_report_conversion(url) {
-				const urlParams = new URLSearchParams(window.location.search);
-				const utmSource = urlParams.get('utm_source');
+    <script>
+      function gtag_report_conversion(url) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const utmSource = urlParams.get("utm_source");
 
-				// Check if utm_source exists and equals 'google'
-				if (utmSource && utmSource.toLowerCase() === 'google') {
-					var callback = function () {
-						if (typeof(url) != 'undefined') {
-							window.location = url;
-						}
-					};
-					gtag('event', 'conversion', {
-						'send_to': 'AW-16967838342/nnhRCM6dnbcaEIbV8po_',
-						'event_callback': callback
-					});
-					return false;
-				}
-				return true; // Return true if condition is not met
-			}
+        // Check if utm_source exists and equals 'google'
+        if (utmSource && utmSource.toLowerCase() === "google") {
+          var callback = function () {
+            if (typeof url != "undefined") {
+              window.location = url;
+            }
+          };
+          gtag("event", "conversion", {
+            send_to: "AW-16967838342/nnhRCM6dnbcaEIbV8po_",
+            event_callback: callback,
+          });
+          return false;
+        }
+        return true; // Return true if condition is not met
+      }
 
-			function gtag_report_premium_conversion(url) {
-				const urlParams = new URLSearchParams(window.location.search);
-				const utmSource = urlParams.get('utm_source');
+      function gtag_report_premium_conversion(url) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const utmSource = urlParams.get("utm_source");
 
-				// Check if utm_source exists and equals 'google'
-				if (utmSource && utmSource.toLowerCase() === 'google') {
-					var callback = function () {
-						if (typeof(url) != 'undefined') {
-							window.location = url;
-						}
-					};
-					gtag('event', 'conversion', {
-						'send_to': 'AW-16967838342/xeVFCLWZrbkaEIbV8po_',
-						'event_callback': callback
-					});
-					return false;
-				}
-				return true; // Return true if condition is not met
-			}
-		</script>
-</head>
-<body>
+        // Check if utm_source exists and equals 'google'
+        if (utmSource && utmSource.toLowerCase() === "google") {
+          var callback = function () {
+            if (typeof url != "undefined") {
+              window.location = url;
+            }
+          };
+          gtag("event", "conversion", {
+            send_to: "AW-16967838342/xeVFCLWZrbkaEIbV8po_",
+            event_callback: callback,
+          });
+          return false;
+        }
+        return true; // Return true if condition is not met
+      }
+    </script>
+  </head>
+  <body>
     <div id="nav-wrapper">
-        <h2>CoinDrop</h2>
-        <a href="https://explorer.solana.com/address/mntq6hnGWU9761TRZdzeAkhTmAuTUKRQqZe1D7787UV" target="_blank"><h5>Mint Address: mntq6hnGWU9761TRZdzeAkhTmAuTUKRQqZe1D7787UV</h5></a>
+      <h2>CoinDrop</h2>
+      <a
+        href="https://explorer.solana.com/address/H75kvrVzWtnqai88B7xRRxGxs33hjKST72ay7ex5SPZA"
+        target="_blank"
+        ><h5>Mint Address: H75kvrVzWtnqai88B7xRRxGxs33hjKST72ay7ex5SPZA</h5></a
+      >
     </div>
 
-		<center>
-    		<h1>Earn Crypto Daily with CoinDrop Airdrops</h1>
-		</center>
+    <center>
+      <h1>Turning clicks into $DROP</h1>
+    </center>
 
     <div id="top-container">
-        <div id="screenshot-wrapper">
-            <img id="home-screenshot" alt="CoinDrop App Home Page for Crypto Airdrops" src="../assets/coindrop/coindrop_home_screenshot.png">
-            <div id="bg-screenshot-wrapper">
-                <img class="bg-screenshots" alt="CoinDrop Membership Page for Crypto Rewards" src="../assets/coindrop/coindrop_membership_screenshot.png">
-                <img class="bg-screenshots" alt="CoinDrop Store Page for Airdrop Earnings" src="../assets/coindrop/coindrop_store_screenshot.png">
-            </div>
+      <div id="screenshot-wrapper">
+        <img
+          id="home-screenshot"
+          alt="CoinDrop App Home Page for Crypto Airdrops"
+          src="../assets/coindrop/coindrop_home_screenshot.png"
+        />
+        <div id="bg-screenshot-wrapper">
+          <img
+            class="bg-screenshots"
+            alt="CoinDrop Membership Page for Crypto Rewards"
+            src="../assets/coindrop/coindrop_membership_screenshot.png"
+          />
+          <img
+            class="bg-screenshots"
+            alt="CoinDrop Store Page for Airdrop Earnings"
+            src="../assets/coindrop/coindrop_store_screenshot.png"
+          />
         </div>
+      </div>
 
-        <button onclick="openGooglePlayStore(); gtag_report_conversion()">Google Play Store <i class="fa-brands fa-google-play"></i></button>
-        <!--<button onclick="openAmazonStore(); gtag_report_conversion()">Amazon Store <i class="fa-brands fa-amazon"></i></button>-->
-				<!-- Social Sharing Widgets -->
-        <div class="social-share">
-            <a href="https://x.com/share?url=YOUR_PAGE_URL" target="_blank"><i class="fa-brands fa-x"></i> Share on X</a>
-            <a href="https://www.facebook.com/sharer/sharer.php?u=YOUR_PAGE_URL" target="_blank"><i class="fa-brands fa-facebook"></i> Share on Facebook</a>
-        </div>
+      <h4 style="margin-bottom: 0">
+        Attention: We will never ask for your private keys, seed phrase, or
+        wallet credentials.
+      </h4>
+
+      <button onclick="openGooglePlayStore(); gtag_report_conversion()">
+        Google Play Store <i class="fa-brands fa-google-play"></i>
+      </button>
+      <!-- Social Sharing Widgets -->
+      <div class="social-share">
+        <a
+          href="https://x.com/share?text=Join%20us%20on%20CoinDrop!&url=https://coinx.gspteck.com/coindrop"
+          target="_blank"
+          ><i class="fa-brands fa-x"></i> Share on X</a
+        >
+        <a
+          href="https://x.com/intent/tweet?text=Join%20us%20on%20CoinDrop!&url=https://coindrop.com"
+          target="_blank"
+          ><i class="fa-brands fa-facebook"></i> Share on Facebook</a
+        >
+      </div>
     </div>
 
     <div id="middle-container">
-        <h2>The Ultimate Airdrop App</h2>
-        <h4>Crypto earnings at your fingertips!</h4>   
+      <h2>What is CoinDrop?</h2>
 
-        <p style="width:75vw;text-align:center;">CoinDrop is the leading airdrop platform for earning cryptocurrency effortlessly. Whether you're new to decentralized finance (DeFi) or a seasoned crypto enthusiast, CoinDrop lets you build your $DROP portfolio by completing simple tasks, referring friends, or upgrading to Premium for higher rewards. Join now and start earning crypto daily, with distributions on July 5, 2026.</p>
-				<br>
+      <p style="width: 75vw; text-align: center">
+        CoinDrop is an amazing airdrop platform for earning cryptocurrency
+        effortlessly. Whether you're new to decentralized finance or a seasoned
+        crypto enthusiast, CoinDrop lets you build your $DROP portfolio by
+        completing simple tasks, referring friends, or upgrading to Premium for
+        higher rewards. Join now and start earning crypto daily!
+      </p>
+      <br />
 
-        <div class="feature-wrapper">
-            <div class="feature-container">
-                <img alt="Button Click Feature for CoinDrop Airdrops" src="../assets/coindrop/button_thumb.jpg">
-                <h4>Click to Earn</h4>
-            </div>
-            <div class="feature-container">
-                <img alt="Tasks Feature for CoinDrop Crypto Rewards" src="../assets/coindrop/tasks_thumb.jpg">
-                <h4>Complete Simple Tasks</h4>
-            </div>
+      <div class="feature-wrapper">
+        <div class="feature-container">
+          <img
+            alt="Button Click Feature for CoinDrop Airdrops"
+            src="../assets/coindrop/button_thumb.jpg"
+          />
+          <h4>Click to Earn</h4>
         </div>
-        <div class="feature-wrapper">
-            <div class="feature-container">
-                <img alt="Contribute Feature for CoinDrop Development" src="../assets/coindrop/contribute_thumb.jpg">
-                <h4>Contribute to Development</h4>
-            </div>
-            <div class="feature-container">
-                <img alt="Referrals Feature for CoinDrop Earnings" src="../assets/coindrop/referrals_thumb.jpg">
-                <h4>Refer Your Friends</h4>
-            </div>
+        <div class="feature-container">
+          <img
+            alt="Tasks Feature for CoinDrop Crypto Rewards"
+            src="../assets/coindrop/tasks_thumb.jpg"
+          />
+          <h4>Complete Simple Tasks</h4>
         </div>
-
-        <button onclick="openGooglePlayStore(); gtag_report_conversion()">Get Access Now!</button>
+      </div>
+      <div class="feature-wrapper">
+        <div class="feature-container">
+          <img
+            alt="Contribute Feature for CoinDrop Development"
+            src="../assets/coindrop/contribute_thumb.jpg"
+          />
+          <h4>Contribute to Development</h4>
+        </div>
+        <div class="feature-container">
+          <img
+            alt="Referrals Feature for CoinDrop Earnings"
+            src="../assets/coindrop/referrals_thumb.jpg"
+          />
+          <h4>Refer Your Friends</h4>
+        </div>
+      </div>
     </div>
 
-    <div id="bottom-container">
-        <h2>Build a High-Value Crypto Portfolio</h2>
-				
-				<center>
-        		<p style="width:75vw;">With CoinDrop, you can grow your cryptocurrency holdings through daily airdrops and exclusive perks. Choose between our Free or Premium plans to start earning $DROP tokens, with more features coming soon.</p>
-        </center>
+    <center>
+      <button
+        style="scale: 0.25"
+        onclick="window.open('https://x.com/coindropapp')"
+      >
+        <img src="../assets/x-twitter.svg" />
+      </button>
+    </center>
 
-        <h3>The Best VIP Membership</h3>
-        <h5>More perks coming soon!</h5>
-        <div id="membership-wrapper">
-            <div class="plan-container">
-                <h3>Free</h3>
-                <hr>
-                <ul>
-                    <li><b>Standard</b> button click rewards.</li>
-                    <li><b>Standard</b> task rewards.</li>
-                    <li><b>Standard</b> referral rewards.</li>
-                    <li><b>$DROP</b> airdrop on <b>July 5, 2026</b>.</li>
-                    <li><b>No</b> secondary token airdrop on <b>July 5, 2026</b>.</li>
-                    <li><b>3-second</b> energy recovery.</li>
-                </ul>
-                <button onclick="openGooglePlayStore(); gtag_report_conversion()">Download</button>
-            </div>
-            <div class="plan-container">
-                <h3>Premium</h3>
-                <hr>
-                <ul>
-                    <li><b>100x</b> button click rewards.</li>
-                    <li><b>100x</b> task rewards.</li>
-                    <li><b>100x</b> referral rewards.</li>
-                    <li><b>$DROP</b> airdrop on <b>July 5, 2026</b>.</li>
-                    <li><b>1:1</b> secondary token airdrop on <b>July 5, 2026</b>.</li>
-                    <li><b>Infinite</b> energy, no recovery needed.</li>
-                </ul>
-                <button onclick="openGooglePlayStore(); gtag_report_premium_conversion()">Let's Go!</button>
-            </div>
-        </div>
-    </div>
+    <h4 id="credits">
+      Created by <a href="https://gspteck.com">gspteck</a> |
+      <a href="https://sites.google.com/view/coindrop-privacypolicy/home"
+        >Privacy Policy</a
+      >
+    </h4>
 
-		<center><button style="scale:0.25" onclick="window.open('https://x.com/coindropapp')"><img src="../assets/x-twitter.svg"></button></center>
-
-    <h4 id="credits">Created by <a href="https://gspteck.com">gspteck</a>.</h4>
-          
     <script src="../scripts/coindropscript.js"></script>
-</body>
+  </body>
 </html>

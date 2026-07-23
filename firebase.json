@@ -40,18 +40,53 @@
     ],
     "rewrites": [
       {
+        "source": "/coindrop/api/rankgoat-publish",
+        "function": "rankgoatPublish",
+        "region": "us-central1"
+      },
+      {
         "source": "/coindrop",
         "destination": "/views/coindrop.html"
       },
       {
+        "source": "/coindrop/sitemap.xml",
+        "function": "coindropSitemapXml",
+        "region": "us-central1"
+      },
+      {
+        "source": "/coindrop/robots.txt",
+        "function": "coindropRobotsTxt",
+        "region": "us-central1"
+      },
+      {
+        "source": "/coindrop/**",
+        "function": "serveCoindropPage",
+        "region": "us-central1"
+      },
+      {
         "source": "/sitemap.xml",
-        "destination": "/sitemap.xml"
+        "function": "sitemapXml",
+        "region": "us-central1"
       },
       {
         "source": "/robots.txt",
-        "destination": "/robots.txt"
+        "function": "robotsTxt",
+        "region": "us-central1"
       }
     ],
     "cleanUrls": true
-  }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ]
 }

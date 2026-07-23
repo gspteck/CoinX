@@ -1,0 +1,9 @@
+# CoinX CoinDrop - robots.txt for /coindrop section
+# In production, this is served by Cloud Functions (coindropRobotsTxt)
+# and automatically includes all published /coindrop/*.html pages.
+
+User-agent: *
+Allow: /coindrop
+
+# Sitemap for CoinDrop section
+Sitemap: https://coinx.gspteck.com/coindrop/sitemap.xml

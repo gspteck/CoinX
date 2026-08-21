@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "coinx-c08b6"
-  }
+  },
+  "targets": {
+    "coinx-c08b6": {
+      "hosting": {
+        "main": [
+          "coinx-c08b6"
+        ],
+        "coindrop": [
+          "coindropapp"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

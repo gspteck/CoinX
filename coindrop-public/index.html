@@ -14,11 +14,25 @@
       name="keywords"
       content="CoinDrop, earn crypto, crypto airdrops, daily rewards, Solana airdrop, DeFi tasks, crypto tasks, refer friends crypto, free cryptocurrency"
     />
-    <link rel="canonical" href="https://coinx.gspteck.com/coindrop" />
+    <link rel="canonical" href="https://coindrop.website/" />
+    <!-- Default Firebase hosts are not canonical; collapse to apex (Hosting can't host-match redirects). -->
+    <script>
+      (function () {
+        var h = location.hostname;
+        if (h === "coindropapp.web.app" || h === "coindropapp.firebaseapp.com") {
+          location.replace(
+            "https://coindrop.website" +
+              location.pathname +
+              location.search +
+              location.hash
+          );
+        }
+      })();
+    </script>
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="CoinX - CoinDrop" />
+    <meta property="og:site_name" content="CoinDrop" />
     <meta
       property="og:title"
       content="CoinDrop: Earn Free Crypto with Daily Airdrops"
@@ -27,10 +41,10 @@
       property="og:description"
       content="Join CoinDrop to earn cryptocurrency daily. Complete tasks, refer friends, and participate in airdrops. Built by CoinX on Solana."
     />
-    <meta property="og:url" content="https://coinx.gspteck.com/coindrop" />
+    <meta property="og:url" content="https://coindrop.website/" />
     <meta
       property="og:image"
-      content="https://coinx.gspteck.com/assets/coindrop/coindrop_logo.png"
+      content="https://coindrop.website/assets/coindrop/coindrop_logo.png"
     />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
@@ -53,18 +67,18 @@
     />
     <meta
       name="twitter:image"
-      content="https://coinx.gspteck.com/assets/coindrop/coindrop_logo.png"
+      content="https://coindrop.website/assets/coindrop/coindrop_logo.png"
     />
 
     <!-- Favicons -->
     <link
       rel="icon"
       type="image/png"
-      href="../assets/coindrop/coindrop_logo.png"
+      href="assets/coindrop/coindrop_logo.png"
     />
-    <link rel="apple-touch-icon" href="../assets/coindrop/coindrop_logo.png" />
+    <link rel="apple-touch-icon" href="assets/coindrop/coindrop_logo.png" />
 
-    <link rel="stylesheet" href="../stylesheets/coindropstyle.css" />
+    <link rel="stylesheet" href="stylesheets/coindropstyle.css" />
 
     <script
       src="https://kit.fontawesome.com/363890c876.js"
@@ -109,16 +123,16 @@ In your html page, add the snippet and call gtag_report_conversion when someone 
         "@graph": [
           {
             "@type": "SoftwareApplication",
-            "@id": "https://coinx.gspteck.com/coindrop#app",
+            "@id": "https://coindrop.website/#app",
             "name": "CoinDrop",
             "applicationCategory": "FinanceApplication",
             "operatingSystem": "Android",
-            "url": "https://coinx.gspteck.com/coindrop",
+            "url": "https://coindrop.website/",
             "downloadUrl": "https://play.google.com/store/apps/details?id=com.gspteck.coindrop",
             "screenshot": [
-              "https://coinx.gspteck.com/assets/coindrop/coindrop_home_screenshot.png",
-              "https://coinx.gspteck.com/assets/coindrop/coindrop_store_screenshot.png",
-              "https://coinx.gspteck.com/assets/coindrop/coindrop_membership_screenshot.png"
+              "https://coindrop.website/assets/coindrop/coindrop_home_screenshot.png",
+              "https://coindrop.website/assets/coindrop/coindrop_store_screenshot.png",
+              "https://coindrop.website/assets/coindrop/coindrop_membership_screenshot.png"
             ],
             "description": "Earn cryptocurrency daily with CoinDrop. Complete simple tasks, join airdrops, refer friends and earn $DROP rewards on Solana.",
             "offers": {
@@ -139,10 +153,10 @@ In your html page, add the snippet and call gtag_report_conversion when someone 
           },
           {
             "@type": "Organization",
-            "@id": "https://coinx.gspteck.com/#organization",
+            "@id": "https://coindrop.website/#organization",
             "name": "CoinX",
             "url": "https://coinx.gspteck.com/",
-            "logo": "https://coinx.gspteck.com/assets/coindrop/coindrop_logo.png",
+            "logo": "https://coindrop.website/assets/coindrop/coindrop_logo.png",
             "sameAs": ["https://x.com/coindropapp"]
           }
         ]
@@ -155,7 +169,7 @@ In your html page, add the snippet and call gtag_report_conversion when someone 
       <a
         href="https://explorer.solana.com/address/mntq6hnGWU9761TRZdzeAkhTmAuTUKRQqZe1D7787UV"
         target="_blank"
-        ><h5>Mint Addres: mntq6hnGWU9761TRZdzeAkhTmAuTUKRQqZe1D7787UV</h5></a
+        ><h5>Mint Address: mntq6hnGWU9761TRZdzeAkhTmAuTUKRQqZe1D7787UV</h5></a
       >
     </div>
 
@@ -163,18 +177,18 @@ In your html page, add the snippet and call gtag_report_conversion when someone 
       <div id="screenshot-wrapper">
         <img
           id="home-screenshot"
-          src="../assets/coindrop/coindrop_home_screenshot.png"
+          src="assets/coindrop/coindrop_home_screenshot.png"
           alt="CoinDrop home screen showing daily crypto earnings and balance"
         />
         <div id="bg-screenshot-wrapper">
           <img
             class="bg-screenshots"
-            src="../assets/coindrop/coindrop_membership_screenshot.png"
+            src="assets/coindrop/coindrop_membership_screenshot.png"
             alt="CoinDrop membership plans with free and premium reward tiers"
           />
           <img
             class="bg-screenshots"
-            src="../assets/coindrop/coindrop_store_screenshot.png"
+            src="assets/coindrop/coindrop_store_screenshot.png"
             alt="CoinDrop in-app store for redeeming crypto rewards"
           />
         </div>
@@ -192,14 +206,14 @@ In your html page, add the snippet and call gtag_report_conversion when someone 
       <div class="feature-wrapper">
         <div class="feature-container">
           <img
-            src="../assets/coindrop/button_thumb.jpg"
+            src="assets/coindrop/button_thumb.jpg"
             alt="One-tap button to claim daily crypto rewards in CoinDrop"
           />
           <h4>Press a button.</h4>
         </div>
         <div class="feature-container">
           <img
-            src="../assets/coindrop/tasks_thumb.jpg"
+            src="assets/coindrop/tasks_thumb.jpg"
             alt="Complete simple tasks in CoinDrop to earn free crypto"
           />
           <h4>Complete simple tasks.</h4>
@@ -208,14 +222,14 @@ In your html page, add the snippet and call gtag_report_conversion when someone 
       <div class="feature-wrapper">
         <div class="feature-container">
           <img
-            src="../assets/coindrop/contribute_thumb.jpg"
+            src="assets/coindrop/contribute_thumb.jpg"
             alt="Contribute to crypto projects and earn rewards on CoinDrop"
           />
           <h4>Contribute to development.</h4>
         </div>
         <div class="feature-container">
           <img
-            src="../assets/coindrop/referrals_thumb.jpg"
+            src="assets/coindrop/referrals_thumb.jpg"
             alt="Refer friends on CoinDrop and earn bonus crypto rewards"
           />
           <h4>Refer your friends.</h4>
@@ -262,6 +276,6 @@ In your html page, add the snippet and call gtag_report_conversion when someone 
 
     <h4 id="credits">created by <a href="https://gspteck.com">gspteck</a>.</h4>
 
-    <script src="../scripts/coindropscript.js"></script>
+    <script src="scripts/coindropscript.js"></script>
   </body>
 </html>

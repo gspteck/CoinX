@@ -1,14 +1,11 @@
-# CoinX - Global robots.txt
-# In production, this is served by Cloud Functions and automatically includes
-# all published /coindrop/*.html pages from the rankgoat webhook.
+# CoinX main site robots.txt
+# Note: Published CoinDrop pages now live on the dedicated coindrop site (coindropapp).
 
 User-agent: *
 Allow: /
-Allow: /coindrop
 
 # Disallow private or non-public assets
 Disallow: /assets/private/
 
-# Sitemap
+# Sitemap (main site only)
 Sitemap: https://coinx.gspteck.com/sitemap.xml
-Sitemap: https://coinx.gspteck.com/coindrop/sitemap.xml

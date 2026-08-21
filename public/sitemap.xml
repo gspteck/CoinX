@@ -1,20 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- 
-  CoinX - Global sitemap.xml
-  In production this is served dynamically by Cloud Functions (sitemapXml).
-  Published /coindrop/*.html pages from the rankgoat webhook are automatically added.
+  CoinX main site sitemap.
+  Published CoinDrop pages now live on the dedicated coindrop site (coindropapp).
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://coinx.gspteck.com/</loc>
-    <lastmod>2026-07-23</lastmod>
+    <lastmod>2026-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://coinx.gspteck.com/coindrop</loc>
-    <lastmod>2026-07-23</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
   </url>
 </urlset>

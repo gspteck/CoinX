@@ -7,6 +7,16 @@ const express = require("express");
 admin.initializeApp();
 const db = admin.firestore();
 
+// === Published content configuration (makes functions reusable across projects) ===
+// Change these values (or load via functions config) when reusing for a future dedicated publishing site.
+const PUBLISHED_BASE_URL = "https://coindrop.website";
+const PUBLISHED_COLLECTION = "coindropPages";
+// The root path for the "landing" of published content on the dedicated site.
+const PUBLISHED_LANDING = "/";
+// Hosts that may serve the same Firebase Hosting site (custom domain + default web.app).
+// Only the apex custom domain is canonical for SEO; others 301 here.
+const PUBLISHED_CANONICAL_HOSTS = new Set(["coindrop.website"]);
+
 // Lazily obtain the default storage bucket only when needed (media uploads).
 // This avoids errors during plain `require()` / syntax checks outside a real Firebase context.
 let _bucket = null;
@@ -20,7 +30,7 @@ function getBucket() {
 // === Secret stored via: firebase functions:secrets:set RANKGOAT_SECRET ===
 const rankgoatSecret = defineSecret("RANKGOAT_SECRET");
 
-// === RankGoat contract v2 helpers ===
+// === RankGoat contract v3 helpers ===
 
 function getRankGoatHeaders(req) {
   // Header names are case-insensitive via req.get()
@@ -95,11 +105,89 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
-function buildPublishedHtml(post) {
+/**
+ * Render RankGoat related_articles as an internal-link list for crawl discovery.
+ * Keep each title/url exactly; never add nofollow.
+ */
+function buildRelatedArticlesHtml(relatedArticles) {
+  if (!Array.isArray(relatedArticles) || relatedArticles.length === 0) {
+    return "";
+  }
+
+  const items = relatedArticles
+    .filter((a) => a && typeof a.title === "string" && typeof a.url === "string" && a.title && a.url)
+    .map(
+      (a) =>
+        `      <li><a href="${escapeHtml(a.url)}">${escapeHtml(a.title)}</a></li>`
+    )
+    .join("\n");
+
+  if (!items) return "";
+
+  return `
+  <aside class="related-articles" aria-labelledby="related-articles-heading">
+    <h2 id="related-articles-heading">Related articles</h2>
+    <ul>
+${items}
+    </ul>
+  </aside>`;
+}
+
+/** Request host without port (prefers X-Forwarded-Host from Firebase Hosting). */
+function getRequestHost(req) {
+  const forwarded = (req.get("x-forwarded-host") || "").split(",")[0].trim();
+  const raw = forwarded || req.get("host") || "";
+  return raw.toLowerCase().replace(/:\d+$/, "");
+}
+
+function isCanonicalPublishedHost(host) {
+  return PUBLISHED_CANONICAL_HOSTS.has(host);
+}
+
+/** Absolute canonical URL for a clean path (e.g. "/" or "/my-slug"). */
+function publishedCanonicalUrl(cleanPath) {
+  const path =
+    !cleanPath || cleanPath === "/"
+      ? "/"
+      : `/${String(cleanPath).replace(/^\/+|\/+$/g, "")}`;
+  return path === "/" ? `${PUBLISHED_BASE_URL}/` : `${PUBLISHED_BASE_URL}${path}`;
+}
+
+function redirectToPublishedCanonical(res, cleanPath) {
+  const location = publishedCanonicalUrl(cleanPath);
+  res.set("Cache-Control", "public, max-age=3600");
+  res.redirect(301, location);
+}
+
+/**
+ * Ensure a single <link rel="canonical"> pointing at the preferred URL.
+ * Replaces any existing canonical so stored HTML and runtime stay consistent.
+ */
+function ensureCanonicalLink(html, canonicalHref) {
+  if (!html || typeof html !== "string") return html;
+  const linkTag = `<link rel="canonical" href="${escapeHtml(canonicalHref)}">`;
+  if (/rel\s*=\s*["']canonical["']/i.test(html)) {
+    return html.replace(
+      /<link\b[^>]*\brel\s*=\s*["']canonical["'][^>]*>/i,
+      linkTag
+    );
+  }
+  if (/<head[^>]*>/i.test(html)) {
+    return html.replace(/<head[^>]*>/i, (m) => `${m}\n  ${linkTag}`);
+  }
+  return `${linkTag}\n${html}`;
+}
+
+function buildPublishedHtml(post, relatedArticles) {
   const title = post.title || "Published Page";
   const description = post.meta_description || "";
   const bodyHtml = post.body_html || "";
   const jsonLd = post.json_ld ? JSON.stringify(post.json_ld) : null;
+  const relatedHtml = buildRelatedArticlesHtml(relatedArticles);
+  const slug = sanitizeSlug(post.slug);
+  const canonicalHref = slug
+    ? publishedCanonicalUrl(`/${slug}`)
+    : `${PUBLISHED_BASE_URL}/`;
 
   const trimmed = bodyHtml.trim();
   const looksComplete = /^<!doctype|<html/i.test(trimmed);
@@ -115,7 +203,15 @@ function buildPublishedHtml(post) {
         html = script + "\n" + html;
       }
     }
-    return html;
+    // Append Related articles before </body> so internal links are crawlable
+    if (relatedHtml) {
+      if (/<\/body>/i.test(html)) {
+        html = html.replace(/<\/body>/i, `${relatedHtml}\n</body>`);
+      } else {
+        html = html + relatedHtml;
+      }
+    }
+    return ensureCanonicalLink(html, canonicalHref);
   }
 
   // Build a clean standalone HTML document
@@ -129,6 +225,7 @@ function buildPublishedHtml(post) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(title)}</title>
+  <link rel="canonical" href="${escapeHtml(canonicalHref)}">
   ${description ? `<meta name="description" content="${escapeHtml(description)}">` : ""}
   ${ldScript}
   <style>
@@ -137,6 +234,10 @@ function buildPublishedHtml(post) {
     img, figure, video { max-width: 100%; height: auto; display: block; }
     pre, code { background: #f6f8fa; padding: 2px 6px; border-radius: 4px; }
     h1, h2, h3 { line-height: 1.25; }
+    .related-articles { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; }
+    .related-articles h2 { font-size: 1.15rem; margin: 0 0 0.75rem; }
+    .related-articles ul { margin: 0; padding-left: 1.25rem; }
+    .related-articles li { margin: 0.35rem 0; }
   </style>
 </head>
 <body>
@@ -144,6 +245,7 @@ function buildPublishedHtml(post) {
     <h1>${escapeHtml(title)}</h1>
     ${bodyHtml}
   </article>
+  ${relatedHtml}
 </body>
 </html>`;
 }
@@ -153,6 +255,8 @@ function sanitizeSlug(raw) {
   let s = raw.trim().replace(/^\/+|\/+$/g, "").replace(/\.html$/i, "");
   s = s.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
   if (!s || s.length === 0 || s.length > 64) return null;
+  // Reserved paths on the dedicated published site (root-level).
+  // Keep generic so the same functions can be reused for future projects.
   const reserved = new Set(["api", "assets", "index", "404", "sitemap", "robots"]);
   if (reserved.has(s)) return null;
   return s;
@@ -167,7 +271,7 @@ function isValidHtml(str) {
 
 async function savePublishedPage(slug, html) {
   const now = admin.firestore.FieldValue.serverTimestamp();
-  await db.collection("coindropPages").doc(slug).set({
+  await db.collection(PUBLISHED_COLLECTION).doc(slug).set({
     slug,
     html,
     publishedAt: now,
@@ -176,47 +280,92 @@ async function savePublishedPage(slug, html) {
 }
 
 async function getPublishedPage(slug) {
-  const doc = await db.collection("coindropPages").doc(slug).get();
+  const doc = await db.collection(PUBLISHED_COLLECTION).doc(slug).get();
   if (!doc.exists) return null;
   return doc.data();
 }
 
 async function listPublishedSlugs() {
-  const snap = await db.collection("coindropPages").select().get();
-  return snap.docs.map(d => d.id);
+  const snap = await db.collection(PUBLISHED_COLLECTION).select().get();
+  return snap.docs.map((d) => d.id);
 }
 
-// === Shared sitemap helpers ===
+/** @returns {Promise<Array<{ slug: string, lastmod: string }>>} */
+async function listPublishedPagesForSitemap() {
+  const snap = await db
+    .collection(PUBLISHED_COLLECTION)
+    .select("updatedAt", "publishedAt")
+    .get();
+  const today = new Date().toISOString().split("T")[0];
+  return snap.docs.map((d) => {
+    const data = d.data() || {};
+    const ts = data.updatedAt || data.publishedAt;
+    let lastmod = today;
+    if (ts && typeof ts.toDate === "function") {
+      lastmod = ts.toDate().toISOString().split("T")[0];
+    }
+    return { slug: d.id, lastmod };
+  });
+}
 
-async function getCoindropSitemapEntries() {
+// === Shared sitemap helpers (use PUBLISHED_* constants for reuse) ===
+// Served live by publishedSitemapXml / publishedRobotsTxt on each request.
+// RankGoat post.publish | post.update | post.delete write Firestore; the next
+// crawl of /sitemap.xml and /robots.txt picks up the new set of slugs automatically.
+// IMPORTANT: do not deploy static robots.txt / sitemap.xml on the coindrop
+// hosting target — Firebase serves exact static files before rewrites.
+
+function toIsoDate(value) {
+  if (!value) return new Date().toISOString().split("T")[0];
+  if (typeof value.toDate === "function") {
+    return value.toDate().toISOString().split("T")[0];
+  }
+  if (value instanceof Date) return value.toISOString().split("T")[0];
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+    return value.slice(0, 10);
+  }
+  return new Date().toISOString().split("T")[0];
+}
+
+async function getPublishedSitemapEntries() {
+  const today = toIsoDate(new Date());
   const entries = [
-    { loc: "https://coinx.gspteck.com/coindrop", priority: "0.9", changefreq: "monthly" },
+    {
+      loc: `${PUBLISHED_BASE_URL}/`,
+      lastmod: today,
+      priority: "0.9",
+      changefreq: "monthly",
+    },
   ];
   try {
-    const slugs = await listPublishedSlugs();
-    for (const s of slugs) {
+    const pages = await listPublishedPagesForSitemap();
+    // Stable order helps diffs / Search Console
+    pages.sort((a, b) => a.slug.localeCompare(b.slug));
+    for (const p of pages) {
       entries.push({
-        loc: `https://coinx.gspteck.com/coindrop/${s}.html`,
+        loc: `${PUBLISHED_BASE_URL}/${p.slug}`,
+        lastmod: p.lastmod || today,
         priority: "0.8",
         changefreq: "monthly",
       });
     }
   } catch (e) {
+    console.error("[sitemap] failed to list published pages", e);
     // continue with just the landing page
   }
   return entries;
 }
 
 function buildSitemapXml(entries) {
-  const today = new Date().toISOString().split("T")[0];
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
   ];
   for (const u of entries) {
+    const lastmod = u.lastmod || toIsoDate(new Date());
     xml.push("  <url>");
     xml.push(`    <loc>${u.loc}</loc>`);
-    xml.push(`    <lastmod>${today}</lastmod>`);
+    xml.push(`    <lastmod>${lastmod}</lastmod>`);
     xml.push(`    <changefreq>${u.changefreq}</changefreq>`);
     xml.push(`    <priority>${u.priority}</priority>`);
     xml.push("  </url>");
@@ -225,12 +374,13 @@ function buildSitemapXml(entries) {
   return xml.join("\n");
 }
 
-// === 1. Webhook: POST /coindrop/api/rankgoat-publish (RankGoat contract v2) ===
+// === 1. Webhook: POST /coindrop/api/rankgoat-publish (RankGoat contract v3) ===
 //
 // Correct implementation per RankGoat webhook spec:
 // - Verify X-RankGoat-Signature (sha256=<hex>) against the **raw body bytes** (constant-time HMAC)
 // - Check X-RankGoat-Timestamp (reject if >5 min old)
 // - Branch on X-RankGoat-Event (or payload.event): ping | media.upload | post.publish | post.update | post.delete
+// - v3: honour top-level `test` — full-shaped connection check; reply normally but do not save/publish
 // - Always answer with the documented JSON shape within ~30s
 //
 // We use a tiny dedicated Express app + express.raw() as the very first middleware.
@@ -383,11 +533,13 @@ rankgoatApp.all(/.*/, async (req, res) => {
   }
 
   const event = (headers.event || (payload && payload.event) || "").trim();
+  // v3: connection-check payloads carry test:true — verify & shape-check normally, never persist.
+  const isTest = payload && payload.test === true;
 
   try {
     if (event === "ping") {
-      // Contract v2
-      res.json({ ok: true, version: 2 });
+      // Contract v3 (test flag + post.delete)
+      res.json({ ok: true, version: 3 });
       return;
     }
 
@@ -400,17 +552,23 @@ rankgoatApp.all(/.*/, async (req, res) => {
       for (const m of items) {
         if (!m || !m.filename || !m.data_base64) continue;
         try {
+          // test media: still return a real public URL so the follow-up test
+          // post.publish can rewrite body_html; the post itself is discarded.
           const url = await uploadMediaToStorage(
             m.filename,
             m.data_base64,
             m.content_type,
-            postSlug
+            isTest ? `_test/${postSlug}` : postSlug
           );
           out.push({ filename: m.filename, url });
         } catch (uploadErr) {
           console.error("[rankgoat] media upload failed for", m.filename, uploadErr);
           // Omit entry → RankGoat drops the file (per spec)
         }
+      }
+
+      if (isTest) {
+        console.log("[rankgoat] media.upload test: returned", out.length, "url(s); not linked to a live post");
       }
 
       res.json({ media: out });
@@ -426,27 +584,61 @@ rankgoatApp.all(/.*/, async (req, res) => {
         return;
       }
 
-      const fullHtml = buildPublishedHtml(post);
+      // Use the generic published base URL (root-level slug on the dedicated hosting target)
+      const publishedUrl = `${PUBLISHED_BASE_URL}/${slug}`;
+
+      // v3 test flag: answer with the published_url we would have used, but do not
+      // save, publish, or expose the page (sitemap/robots stay untouched).
+      if (isTest) {
+        console.log(
+          `[rankgoat] ${event} test: acknowledging ${slug} -> ${publishedUrl} (not saved)`
+        );
+        res.json({ published_url: publishedUrl });
+        return;
+      }
+
+      // related_articles: internal links RankGoat expects on the live page for crawl paths
+      const fullHtml = buildPublishedHtml(post, payload.related_articles);
       await savePublishedPage(slug, fullHtml);
 
-      const publishedUrl = `https://coinx.gspteck.com/coindrop/${slug}.html`;
-      console.log(`[rankgoat] ${event}: ${slug} -> ${publishedUrl}`);
+      // Sitemap + robots are generated on the fly from Firestore by
+      // publishedSitemapXml / publishedRobotsTxt — no static file write needed.
+      console.log(
+        `[rankgoat] ${event}: ${slug} -> ${publishedUrl} (sitemap/robots will include via Firestore)`
+      );
 
-      res.json({ published_url: publishedUrl });
+      res.json({
+        published_url: publishedUrl,
+        sitemap_url: `${PUBLISHED_BASE_URL}/sitemap.xml`,
+        robots_url: `${PUBLISHED_BASE_URL}/robots.txt`,
+      });
       return;
     }
 
     if (event === "post.delete") {
+      // test deletes: acknowledge without touching storage
+      if (isTest) {
+        console.log("[rankgoat] post.delete test: acknowledging without delete");
+        res.json({ ok: true });
+        return;
+      }
+
       const slug = sanitizeSlug(payload.post && payload.post.slug);
       if (slug) {
         try {
-          await db.collection("coindropPages").doc(slug).delete();
-          console.log(`[rankgoat] post.delete: removed ${slug}`);
+          await db.collection(PUBLISHED_COLLECTION).doc(slug).delete();
+          console.log(
+            `[rankgoat] post.delete: removed ${slug} (dropped from sitemap/robots on next request)`
+          );
         } catch (delErr) {
           // Idempotent: still return 200
         }
       }
-      res.json({ ok: true });
+      res.json({
+        ok: true,
+        sitemap_url: `${PUBLISHED_BASE_URL}/sitemap.xml`,
+        robots_url: `${PUBLISHED_BASE_URL}/robots.txt`,
+      });
       return;
     }
 
@@ -469,35 +661,59 @@ exports.rankgoatPublish = onRequest(
   rankgoatApp
 );
 
-// === 2. Serve published pages dynamically ===
-// Matches: /coindrop/anything   or   /coindrop/anything.html
+// === 2. Serve published pages dynamically (root-level on dedicated site) ===
+// This function is mounted at the coindrop hosting target root.
+// Matches: /slug   or   /slug.html   (root-level published content)
+// Designed to be reusable for future projects by changing PUBLISHED_* constants.
+//
+// SEO normalizations (Search Console "doubled" URLs):
+//  1. Non-canonical hosts (*.web.app / *.firebaseapp.com) → 301 to PUBLISHED_BASE_URL
+//  2. /slug.html → 301 to /slug
+//  3. Inject/replace <link rel="canonical"> on every response
 
-exports.serveCoindropPage = onRequest(
+exports.servePublishedPage = onRequest(
   {
     region: "us-central1",
     maxInstances: 30,
   },
   async (req, res) => {
     let slug = null;
+    let requestedHtmlExt = false;
 
     const p = req.path || "";
+    const host = getRequestHost(req);
 
-    // Match /coindrop/slug or /coindrop/slug.html
-    let m = p.match(/^\/coindrop\/([a-z0-9-]+)(?:\.html)?$/i);
-    if (m) {
+    // Match root-level slug or slug.html  (e.g. /my-post or /my-post.html)
+    // IMPORTANT: skip the root "/" itself — hosting will serve index.html for that.
+    let m = p.match(/^\/([a-z0-9-]+)(\.html)?$/i);
+    if (m && m[1]) {
       slug = sanitizeSlug(m[1]);
+      requestedHtmlExt = Boolean(m[2]);
     } else if (req.query && req.query.slug) {
       slug = sanitizeSlug(req.query.slug);
     }
 
     if (!slug) {
+      // Still collapse alternate hosts hitting unknown paths toward the canonical site.
+      if (host && !isCanonicalPublishedHost(host)) {
+        redirectToPublishedCanonical(res, "/");
+        return;
+      }
       res.status(404).send("Not found");
       return;
     }
 
-    // Never let the function serve the main landing page
-    if (slug === "coindrop") {
-      res.status(404).send("Not found");
+    const cleanPath = `/${slug}`;
+
+    // Prefer a single host in the index (coindrop.website over coindropapp.web.app).
+    if (host && !isCanonicalPublishedHost(host)) {
+      redirectToPublishedCanonical(res, cleanPath);
+      return;
+    }
+
+    // Prefer clean URLs over .html twins (both used to 200 with identical bodies).
+    if (requestedHtmlExt) {
+      redirectToPublishedCanonical(res, cleanPath);
       return;
     }
 
@@ -508,122 +724,72 @@ exports.serveCoindropPage = onRequest(
         return;
       }
 
+      const canonicalHref = publishedCanonicalUrl(cleanPath);
+      const html = ensureCanonicalLink(page.html, canonicalHref);
+
       res.set("Content-Type", "text/html; charset=utf-8");
       res.set("Cache-Control", "public, max-age=300");
-      res.status(200).send(page.html);
+      res.set("Link", `<${canonicalHref}>; rel="canonical"`);
+      res.status(200).send(html);
     } catch (err) {
-      console.error("[serveCoindropPage] error", err);
+      console.error("[servePublishedPage] error", err);
       res.status(500).send("Error loading page");
     }
   }
 );
 
-// === 3. Global robots.txt (includes all published coindrop pages) ===
+// === 3. Published site robots.txt ===
+// Keep this simple: Allow: / already covers every slug. Dynamic per-slug Allow
+// lines are unnecessary and the static file in coindrop-public/robots.txt is
+// also deployed (Hosting serves exact static files before rewrites).
 
-exports.robotsTxt = onRequest(
+exports.publishedRobotsTxt = onRequest(
   {
     region: "us-central1",
     maxInstances: 10,
   },
   async (req, res) => {
-    res.set("Content-Type", "text/plain; charset=utf-8");
-    res.set("Cache-Control", "public, max-age=300");
+    const host = getRequestHost(req);
+    if (host && !isCanonicalPublishedHost(host)) {
+      redirectToPublishedCanonical(res, "/robots.txt");
+      return;
+    }
 
-    let body = [
+    res.set("Content-Type", "text/plain; charset=utf-8");
+    // Avoid sticky CDN/browser cache of stale Sitemap lines
+    res.set("Cache-Control", "public, max-age=0, must-revalidate");
+
+    const body = [
       "User-agent: *",
       "Allow: /",
-      "Allow: /coindrop",
-      "Disallow: /assets/private/",
-    ];
+      "",
+      `Sitemap: ${PUBLISHED_BASE_URL}/sitemap.xml`,
+      "",
+    ].join("\n");
 
-    try {
-      const slugs = await listPublishedSlugs();
-      for (const s of slugs) {
-        body.push(`Allow: /coindrop/${s}.html`);
-      }
-    } catch (e) {
-      // If Firestore fails we still return a valid robots
+    res.status(200).send(body);
+  }
+);
+
+// === 4. Published site sitemap.xml (landing + all published slugs) ===
+
+exports.publishedSitemapXml = onRequest(
+  {
+    region: "us-central1",
+    maxInstances: 10,
+  },
+  async (req, res) => {
+    const host = getRequestHost(req);
+    if (host && !isCanonicalPublishedHost(host)) {
+      redirectToPublishedCanonical(res, "/sitemap.xml");
+      return;
     }
 
-    body.push("");
-    body.push("Sitemap: https://coinx.gspteck.com/sitemap.xml");
-    body.push("Sitemap: https://coinx.gspteck.com/coindrop/sitemap.xml");
-
-    res.status(200).send(body.join("\n"));
-  }
-);
-
-// === 4. Global sitemap.xml (home + coindrop section) ===
-
-exports.sitemapXml = onRequest(
-  {
-    region: "us-central1",
-    maxInstances: 10,
-  },
-  async (req, res) => {
     res.set("Content-Type", "application/xml; charset=utf-8");
-    res.set("Cache-Control", "public, max-age=300");
+    // Avoid sticky CDN/browser cache of old <loc> hosts after domain changes
+    res.set("Cache-Control", "public, max-age=0, must-revalidate");
 
-    const entries = [
-      { loc: "https://coinx.gspteck.com/", priority: "1.0", changefreq: "weekly" },
-    ];
-
-    // Include the full coindrop section (landing + published pages)
-    const coindropEntries = await getCoindropSitemapEntries();
-    entries.push(...coindropEntries);
-
+    const entries = await getPublishedSitemapEntries();
     res.status(200).send(buildSitemapXml(entries));
-  }
-);
-
-// === 5. Dedicated Coindrop sitemap: /coindrop/sitemap.xml ===
-// This is a focused sitemap containing ONLY the CoinDrop landing page
-// plus all dynamically published /coindrop/*.html pages.
-
-exports.coindropSitemapXml = onRequest(
-  {
-    region: "us-central1",
-    maxInstances: 10,
-  },
-  async (req, res) => {
-    res.set("Content-Type", "application/xml; charset=utf-8");
-    res.set("Cache-Control", "public, max-age=300");
-
-    const entries = await getCoindropSitemapEntries();
-    res.status(200).send(buildSitemapXml(entries));
-  }
-);
-
-// === 6. Dedicated Coindrop robots.txt: /coindrop/robots.txt ===
-// Focused robots file for the CoinDrop section. Lists the landing page
-// and all published /coindrop/*.html pages, and points to the coindrop sitemap.
-
-exports.coindropRobotsTxt = onRequest(
-  {
-    region: "us-central1",
-    maxInstances: 10,
-  },
-  async (req, res) => {
-    res.set("Content-Type", "text/plain; charset=utf-8");
-    res.set("Cache-Control", "public, max-age=300");
-
-    let body = [
-      "User-agent: *",
-      "Allow: /coindrop",
-    ];
-
-    try {
-      const slugs = await listPublishedSlugs();
-      for (const s of slugs) {
-        body.push(`Allow: /coindrop/${s}.html`);
-      }
-    } catch (e) {
-      // still return valid robots on error
-    }
-
-    body.push("");
-    body.push("Sitemap: https://coinx.gspteck.com/coindrop/sitemap.xml");
-
-    res.status(200).send(body.join("\n"));
   }
 );

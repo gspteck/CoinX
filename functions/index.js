@@ -27,10 +27,10 @@ function getBucket() {
   return _bucket;
 }
 
-// === Secret stored via: firebase functions:secrets:set RANKGOAT_SECRET ===
-const rankgoatSecret = defineSecret("RANKGOAT_SECRET");
+// === Secret stored via: firebase functions:secrets:set CONTENTENGINE_SECRET ===
+const contentengineSecret = defineSecret("CONTENTENGINE_SECRET");
 
-// === RankGoat contract v3 helpers ===
+// === contentengine contract v3 helpers ===
 
 function getRankGoatHeaders(req) {
   // Header names are case-insensitive via req.get()
@@ -106,7 +106,7 @@ function escapeHtml(str) {
 }
 
 /**
- * Render RankGoat related_articles as an internal-link list for crawl discovery.
+ * Render contentengine related_articles as an internal-link list for crawl discovery.
  * Keep each title/url exactly; never add nofollow.
  */
 function buildRelatedArticlesHtml(relatedArticles) {
@@ -310,7 +310,7 @@ async function listPublishedPagesForSitemap() {
 
 // === Shared sitemap helpers (use PUBLISHED_* constants for reuse) ===
 // Served live by publishedSitemapXml / publishedRobotsTxt on each request.
-// RankGoat post.publish | post.update | post.delete write Firestore; the next
+// contentengine post.publish | post.update | post.delete write Firestore; the next
 // crawl of /sitemap.xml and /robots.txt picks up the new set of slugs automatically.
 // IMPORTANT: do not deploy static robots.txt / sitemap.xml on the coindrop
 // hosting target — Firebase serves exact static files before rewrites.
@@ -374,9 +374,9 @@ function buildSitemapXml(entries) {
   return xml.join("\n");
 }
 
-// === 1. Webhook: POST /coindrop/api/rankgoat-publish (RankGoat contract v3) ===
+// === 1. Webhook: POST /coindrop/api/contentengine-publish (contentengine contract v3) ===
 //
-// Correct implementation per RankGoat webhook spec:
+// Correct implementation per contentengine webhook spec:
 // - Verify X-RankGoat-Signature (sha256=<hex>) against the **raw body bytes** (constant-time HMAC)
 // - Check X-RankGoat-Timestamp (reject if >5 min old)
 // - Branch on X-RankGoat-Event (or payload.event): ping | media.upload | post.publish | post.update | post.delete
@@ -386,9 +386,9 @@ function buildSitemapXml(entries) {
 // We use a tiny dedicated Express app + express.raw() as the very first middleware.
 // This is the only reliable way in Cloud Functions to obtain the untouched bytes for the signature.
 
-const rankgoatApp = express();
+const contentengineApp = express();
 
-// We must obtain the EXACT bytes RankGoat signed with HMAC.
+// We must obtain the EXACT bytes contentengine signed with HMAC.
 // Strategy (in order):
 // 1. Attach a raw stream listener FIRST so we can capture bytes before anyone consumes the request.
 // 2. Then register express.raw with a verify() callback (the normal body-parser way).
@@ -417,10 +417,10 @@ function captureRawBodyFirst(req, res, next) {
 }
 
 // MUST be the absolute first middleware for this app.
-rankgoatApp.use(captureRawBodyFirst);
+contentengineApp.use(captureRawBodyFirst);
 
 // Standard express.raw with verify callback (this is the cleanest path when the stream is still available).
-rankgoatApp.use(
+contentengineApp.use(
   express.raw({
     type: "*/*",
     limit: "20mb",
@@ -435,15 +435,15 @@ rankgoatApp.use(
 
 // Use a wildcard so it doesn't matter what path the rewrite delivers to the function
 // (some rewrites keep the original path, some mount at root).
-rankgoatApp.all(/.*/, async (req, res) => {
+contentengineApp.all(/.*/, async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
 
-  const secret = rankgoatSecret.value();
+  const secret = contentengineSecret.value();
   if (!secret) {
-    console.error("[rankgoat] RANKGOAT_SECRET not set");
+    console.error("[contentengine] CONTENTENGINE_SECRET not set");
     res.status(500).json({ error: "Server misconfigured" });
     return;
   }
@@ -475,8 +475,8 @@ rankgoatApp.all(/.*/, async (req, res) => {
   } else if (b && typeof b === "object") {
     // Pre-parsed object case (caused the original Buffer.from(Object) crash)
     console.warn(
-      "[rankgoat] req.body arrived pre-parsed as Object. Using JSON.stringify for signature bytes " +
-        "(may cause signature mismatch if whitespace/key-order differs from what RankGoat sent). " +
+      "[contentengine] req.body arrived pre-parsed as Object. Using JSON.stringify for signature bytes " +
+        "(may cause signature mismatch if whitespace/key-order differs from what contentengine sent). " +
         "Payload will be taken directly from the parsed object."
     );
     try {
@@ -504,7 +504,7 @@ rankgoatApp.all(/.*/, async (req, res) => {
   const sigOk = verifyRankGoatSignature(rawBody, headers.signature, secret);
   if (!sigOk) {
     // Safe diagnostic logging (never log the secret itself)
-    console.warn("[rankgoat] signature verification FAILED", {
+    console.warn("[contentengine] signature verification FAILED", {
       event: headers.event,
       timestamp: headers.timestamp,
       sigHeader: headers.signature ? headers.signature.substring(0, 20) + "..." : "(missing)",
@@ -515,7 +515,7 @@ rankgoatApp.all(/.*/, async (req, res) => {
     return;
   }
 
-  console.log("[rankgoat] signature OK for event:", headers.event || "(from body)");
+  console.log("[contentengine] signature OK for event:", headers.event || "(from body)");
 
   // Signature OK → obtain payload.
   // If we captured a pre-parsed object earlier, use it (avoids double-stringify issues).
@@ -562,13 +562,13 @@ rankgoatApp.all(/.*/, async (req, res) => {
           );
           out.push({ filename: m.filename, url });
         } catch (uploadErr) {
-          console.error("[rankgoat] media upload failed for", m.filename, uploadErr);
-          // Omit entry → RankGoat drops the file (per spec)
+          console.error("[contentengine] media upload failed for", m.filename, uploadErr);
+          // Omit entry → contentengine drops the file (per spec)
         }
       }
 
       if (isTest) {
-        console.log("[rankgoat] media.upload test: returned", out.length, "url(s); not linked to a live post");
+        console.log("[contentengine] media.upload test: returned", out.length, "url(s); not linked to a live post");
       }
 
       res.json({ media: out });
@@ -591,20 +591,20 @@ rankgoatApp.all(/.*/, async (req, res) => {
       // save, publish, or expose the page (sitemap/robots stay untouched).
       if (isTest) {
         console.log(
-          `[rankgoat] ${event} test: acknowledging ${slug} -> ${publishedUrl} (not saved)`
+          `[contentengine] ${event} test: acknowledging ${slug} -> ${publishedUrl} (not saved)`
         );
         res.json({ published_url: publishedUrl });
         return;
       }
 
-      // related_articles: internal links RankGoat expects on the live page for crawl paths
+      // related_articles: internal links contentengine expects on the live page for crawl paths
       const fullHtml = buildPublishedHtml(post, payload.related_articles);
       await savePublishedPage(slug, fullHtml);
 
       // Sitemap + robots are generated on the fly from Firestore by
       // publishedSitemapXml / publishedRobotsTxt — no static file write needed.
       console.log(
-        `[rankgoat] ${event}: ${slug} -> ${publishedUrl} (sitemap/robots will include via Firestore)`
+        `[contentengine] ${event}: ${slug} -> ${publishedUrl} (sitemap/robots will include via Firestore)`
       );
 
       res.json({
@@ -618,7 +618,7 @@ rankgoatApp.all(/.*/, async (req, res) => {
     if (event === "post.delete") {
       // test deletes: acknowledge without touching storage
       if (isTest) {
-        console.log("[rankgoat] post.delete test: acknowledging without delete");
+        console.log("[contentengine] post.delete test: acknowledging without delete");
         res.json({ ok: true });
         return;
       }
@@ -628,7 +628,7 @@ rankgoatApp.all(/.*/, async (req, res) => {
         try {
           await db.collection(PUBLISHED_COLLECTION).doc(slug).delete();
           console.log(
-            `[rankgoat] post.delete: removed ${slug} (dropped from sitemap/robots on next request)`
+            `[contentengine] post.delete: removed ${slug} (dropped from sitemap/robots on next request)`
           );
         } catch (delErr) {
           // Idempotent: still return 200
@@ -645,20 +645,20 @@ rankgoatApp.all(/.*/, async (req, res) => {
     // Forward compatibility: acknowledge unknown events
     res.json({ ok: true });
   } catch (err) {
-    console.error("[rankgoat] handler error for event", event, err);
+    console.error("[contentengine] handler error for event", event, err);
     res.status(500).json({ error: "internal error" });
   }
 });
 
 // The Cloud Function is the Express app (Firebase will route POSTs here).
-exports.rankgoatPublish = onRequest(
+exports.contentenginePublish = onRequest(
   {
     region: "us-central1",
-    secrets: [rankgoatSecret],
+    secrets: [contentengineSecret],
     cors: false,
     maxInstances: 10,
   },
-  rankgoatApp
+  contentengineApp
 );
 
 // === 2. Serve published pages dynamically (root-level on dedicated site) ===
@@ -793,3 +793,4 @@ exports.publishedSitemapXml = onRequest(
     res.status(200).send(buildSitemapXml(entries));
   }
 );
+

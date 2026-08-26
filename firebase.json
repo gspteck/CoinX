@@ -44,6 +44,26 @@
         {
           "source": "/coindrop",
           "destination": "/views/coindrop.html"
+        },
+        {
+          "source": "/api/contentengine-publish",
+          "function": "contentenginePublish",
+          "region": "us-central1"
+        },
+        {
+          "source": "/sitemap.xml",
+          "function": "publishedSitemapXml",
+          "region": "us-central1"
+        },
+        {
+          "source": "/robots.txt",
+          "function": "publishedRobotsTxt",
+          "region": "us-central1"
+        },
+        {
+          "source": "/**",
+          "function": "servePublishedPage",
+          "region": "us-central1"
         }
       ],
       "cleanUrls": true

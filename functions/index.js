@@ -7,15 +7,57 @@ const express = require("express");
 admin.initializeApp();
 const db = admin.firestore();
 
-// === Published content configuration (makes functions reusable across projects) ===
-// Change these values (or load via functions config) when reusing for a future dedicated publishing site.
-const PUBLISHED_BASE_URL = "https://coindrop.website";
-const PUBLISHED_COLLECTION = "coindropPages";
+// === Published content configuration (multi-tenant: one Firebase project, N sites) ===
+// Each site is a separate brand/domain with its own Firestore collection and media prefix.
+// The webhook can disambiguate which site a publish targets via payload.site ("coindrop"|"coinx"),
+// falling back to request-host detection, then to DEFAULT_SITE (coindrop) for backward compat.
+const SITES = {
+  coindrop: {
+    key: "coindrop",
+    baseUrl: "https://coindrop.website",
+    collection: "coindropPages",
+    canonicalHosts: ["coindrop.website"],
+    mediaPrefix: "coindrop-media",
+  },
+  coinx: {
+    key: "coinx",
+    baseUrl: "https://coinx.gspteck.com",
+    collection: "coinxPages",
+    canonicalHosts: ["coinx.gspteck.com"],
+    mediaPrefix: "coinx-media",
+  },
+};
+const DEFAULT_SITE = SITES.coindrop;
+
 // The root path for the "landing" of published content on the dedicated site.
 const PUBLISHED_LANDING = "/";
-// Hosts that may serve the same Firebase Hosting site (custom domain + default web.app).
-// Only the apex custom domain is canonical for SEO; others 301 here.
-const PUBLISHED_CANONICAL_HOSTS = new Set(["coindrop.website"]);
+
+function getRequestHost(req) {
+  const forwarded = (req.get("x-forwarded-host") || "").split(",")[0].trim();
+  const raw = forwarded || req.get("host") || "";
+  return raw.toLowerCase().replace(/:\d+$/, "");
+}
+
+function siteApexName(host) {
+  if (!host) return null;
+  const apex = host.replace(/^www\./, "").trim();
+  for (const key of Object.keys(SITES)) {
+    if (SITES[key].canonicalHosts.includes(apex)) return key;
+  }
+  return null;
+}
+
+function getSiteForRequest(req) {
+  const key = siteApexName(getRequestHost(req));
+  return (key && SITES[key]) || DEFAULT_SITE;
+}
+
+/** Resolve the site a webhook payload targets (payload.site: "coindrop"|"coinx"). */
+function siteFromPayload(payload) {
+  if (!payload || typeof payload !== "object") return null;
+  const key = payload.site;
+  return SITES[key] || null;
+}
 
 // Lazily obtain the default storage bucket only when needed (media uploads).
 // This avoids errors during plain `require()` / syntax checks outside a real Firebase context.
@@ -32,12 +74,12 @@ const contentengineSecret = defineSecret("CONTENTENGINE_SECRET");
 
 // === contentengine contract v3 helpers ===
 
-function getRankGoatHeaders(req) {
+function getContentEngineHeaders(req) {
   // Header names are case-insensitive via req.get()
   return {
-    event: (req.get("X-RankGoat-Event") || "").trim(),
-    timestamp: (req.get("X-RankGoat-Timestamp") || "").trim(),
-    signature: (req.get("X-RankGoat-Signature") || "").trim(),
+    event: (req.get("X-ContentEngine-Event") || "").trim(),
+    timestamp: (req.get("X-ContentEngine-Timestamp") || "").trim(),
+    signature: (req.get("X-ContentEngine-Signature") || "").trim(),
   };
 }
 
@@ -48,7 +90,7 @@ function isTimestampFresh(tsStr) {
   return Math.abs(now - ts) <= 300; // 5 minutes
 }
 
-function verifyRankGoatSignature(rawBody, signatureHeader, secret) {
+function verifyContentEngineSignature(rawBody, signatureHeader, secret) {
   if (!secret || !signatureHeader || !rawBody) return false;
 
   // Accept "sha256=..." (case-insensitive on the prefix)
@@ -75,11 +117,11 @@ function verifyRankGoatSignature(rawBody, signatureHeader, secret) {
   }
 }
 
-async function uploadMediaToStorage(filename, base64Data, contentType, postSlug) {
+async function uploadMediaToStorage(filename, base64Data, contentType, postSlug, mediaPrefix) {
   const b = getBucket();
   const buffer = Buffer.from(base64Data, "base64");
   const safeFilename = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const destPath = `coindrop-media/${postSlug}/${Date.now()}-${safeFilename}`;
+  const destPath = `${mediaPrefix || "coindrop-media"}/${postSlug}/${Date.now()}-${safeFilename}`;
   const file = b.file(destPath);
 
   await file.save(buffer, {
@@ -134,27 +176,23 @@ ${items}
 }
 
 /** Request host without port (prefers X-Forwarded-Host from Firebase Hosting). */
-function getRequestHost(req) {
-  const forwarded = (req.get("x-forwarded-host") || "").split(",")[0].trim();
-  const raw = forwarded || req.get("host") || "";
-  return raw.toLowerCase().replace(/:\d+$/, "");
-}
-
-function isCanonicalPublishedHost(host) {
-  return PUBLISHED_CANONICAL_HOSTS.has(host);
+function isCanonicalPublishedHost(host, site) {
+  const s = site || DEFAULT_SITE;
+  return s.canonicalHosts.includes(host);
 }
 
 /** Absolute canonical URL for a clean path (e.g. "/" or "/my-slug"). */
-function publishedCanonicalUrl(cleanPath) {
+function publishedCanonicalUrl(cleanPath, site) {
+  const baseUrl = (site || DEFAULT_SITE).baseUrl;
   const path =
     !cleanPath || cleanPath === "/"
       ? "/"
       : `/${String(cleanPath).replace(/^\/+|\/+$/g, "")}`;
-  return path === "/" ? `${PUBLISHED_BASE_URL}/` : `${PUBLISHED_BASE_URL}${path}`;
+  return path === "/" ? `${baseUrl}/` : `${baseUrl}${path}`;
 }
 
-function redirectToPublishedCanonical(res, cleanPath) {
-  const location = publishedCanonicalUrl(cleanPath);
+function redirectToPublishedCanonical(res, cleanPath, site) {
+  const location = publishedCanonicalUrl(cleanPath, site);
   res.set("Cache-Control", "public, max-age=3600");
   res.redirect(301, location);
 }
@@ -178,7 +216,8 @@ function ensureCanonicalLink(html, canonicalHref) {
   return `${linkTag}\n${html}`;
 }
 
-function buildPublishedHtml(post, relatedArticles) {
+function buildPublishedHtml(post, relatedArticles, site) {
+  const s = site || DEFAULT_SITE;
   const title = post.title || "Published Page";
   const description = post.meta_description || "";
   const bodyHtml = post.body_html || "";
@@ -186,8 +225,8 @@ function buildPublishedHtml(post, relatedArticles) {
   const relatedHtml = buildRelatedArticlesHtml(relatedArticles);
   const slug = sanitizeSlug(post.slug);
   const canonicalHref = slug
-    ? publishedCanonicalUrl(`/${slug}`)
-    : `${PUBLISHED_BASE_URL}/`;
+    ? publishedCanonicalUrl(`/${slug}`, s)
+    : `${s.baseUrl}/`;
 
   const trimmed = bodyHtml.trim();
   const looksComplete = /^<!doctype|<html/i.test(trimmed);
@@ -269,9 +308,9 @@ function isValidHtml(str) {
   return /<!doctype|<html|<head|<body/i.test(t);
 }
 
-async function savePublishedPage(slug, html) {
+async function savePublishedPage(slug, html, collection) {
   const now = admin.firestore.FieldValue.serverTimestamp();
-  await db.collection(PUBLISHED_COLLECTION).doc(slug).set({
+  await db.collection(collection || DEFAULT_SITE.collection).doc(slug).set({
     slug,
     html,
     publishedAt: now,
@@ -279,21 +318,21 @@ async function savePublishedPage(slug, html) {
   }, { merge: true });
 }
 
-async function getPublishedPage(slug) {
-  const doc = await db.collection(PUBLISHED_COLLECTION).doc(slug).get();
+async function getPublishedPage(slug, collection) {
+  const doc = await db.collection(collection || DEFAULT_SITE.collection).doc(slug).get();
   if (!doc.exists) return null;
   return doc.data();
 }
 
-async function listPublishedSlugs() {
-  const snap = await db.collection(PUBLISHED_COLLECTION).select().get();
+async function listPublishedSlugs(collection) {
+  const snap = await db.collection(collection || DEFAULT_SITE.collection).select().get();
   return snap.docs.map((d) => d.id);
 }
 
 /** @returns {Promise<Array<{ slug: string, lastmod: string }>>} */
-async function listPublishedPagesForSitemap() {
+async function listPublishedPagesForSitemap(collection) {
   const snap = await db
-    .collection(PUBLISHED_COLLECTION)
+    .collection(collection || DEFAULT_SITE.collection)
     .select("updatedAt", "publishedAt")
     .get();
   const today = new Date().toISOString().split("T")[0];
@@ -327,23 +366,24 @@ function toIsoDate(value) {
   return new Date().toISOString().split("T")[0];
 }
 
-async function getPublishedSitemapEntries() {
+async function getPublishedSitemapEntries(site) {
+  const s = site || DEFAULT_SITE;
   const today = toIsoDate(new Date());
   const entries = [
     {
-      loc: `${PUBLISHED_BASE_URL}/`,
+      loc: `${s.baseUrl}/`,
       lastmod: today,
       priority: "0.9",
       changefreq: "monthly",
     },
   ];
   try {
-    const pages = await listPublishedPagesForSitemap();
+    const pages = await listPublishedPagesForSitemap(s.collection);
     // Stable order helps diffs / Search Console
     pages.sort((a, b) => a.slug.localeCompare(b.slug));
     for (const p of pages) {
       entries.push({
-        loc: `${PUBLISHED_BASE_URL}/${p.slug}`,
+        loc: `${s.baseUrl}/${p.slug}`,
         lastmod: p.lastmod || today,
         priority: "0.8",
         changefreq: "monthly",
@@ -377,9 +417,9 @@ function buildSitemapXml(entries) {
 // === 1. Webhook: POST /coindrop/api/contentengine-publish (contentengine contract v3) ===
 //
 // Correct implementation per contentengine webhook spec:
-// - Verify X-RankGoat-Signature (sha256=<hex>) against the **raw body bytes** (constant-time HMAC)
-// - Check X-RankGoat-Timestamp (reject if >5 min old)
-// - Branch on X-RankGoat-Event (or payload.event): ping | media.upload | post.publish | post.update | post.delete
+// - Verify X-ContentEngine-Signature (sha256=<hex>) against the **raw body bytes** (constant-time HMAC)
+// - Check X-ContentEngine-Timestamp (reject if >5 min old)
+// - Branch on X-ContentEngine-Event (or payload.event): ping | media.upload | post.publish | post.update | post.delete
 // - v3: honour top-level `test` — full-shaped connection check; reply normally but do not save/publish
 // - Always answer with the documented JSON shape within ~30s
 //
@@ -492,7 +532,7 @@ contentengineApp.all(/.*/, async (req, res) => {
     rawBody = Buffer.alloc(0);
   }
 
-  const headers = getRankGoatHeaders(req);
+  const headers = getContentEngineHeaders(req);
 
   // Timestamp freshness check (5 minutes)
   if (!isTimestampFresh(headers.timestamp)) {
@@ -501,7 +541,7 @@ contentengineApp.all(/.*/, async (req, res) => {
   }
 
   // === SIGNATURE VERIFICATION (must be on raw bytes, constant time) ===
-  const sigOk = verifyRankGoatSignature(rawBody, headers.signature, secret);
+  const sigOk = verifyContentEngineSignature(rawBody, headers.signature, secret);
   if (!sigOk) {
     // Safe diagnostic logging (never log the secret itself)
     console.warn("[contentengine] signature verification FAILED", {
@@ -535,6 +575,8 @@ contentengineApp.all(/.*/, async (req, res) => {
   const event = (headers.event || (payload && payload.event) || "").trim();
   // v3: connection-check payloads carry test:true — verify & shape-check normally, never persist.
   const isTest = payload && payload.test === true;
+  // Which site does this publish target? Explicit payload.site wins, else request host, else coindrop.
+  const activeSite = siteFromPayload(payload) || getSiteForRequest(req) || DEFAULT_SITE;
 
   try {
     if (event === "ping") {
@@ -558,7 +600,8 @@ contentengineApp.all(/.*/, async (req, res) => {
             m.filename,
             m.data_base64,
             m.content_type,
-            isTest ? `_test/${postSlug}` : postSlug
+            isTest ? `_test/${postSlug}` : postSlug,
+            activeSite.mediaPrefix
           );
           out.push({ filename: m.filename, url });
         } catch (uploadErr) {
@@ -584,33 +627,33 @@ contentengineApp.all(/.*/, async (req, res) => {
         return;
       }
 
-      // Use the generic published base URL (root-level slug on the dedicated hosting target)
-      const publishedUrl = `${PUBLISHED_BASE_URL}/${slug}`;
+      // Use the resolved site's generic published base URL (root-level slug on the dedicated hosting target)
+      const publishedUrl = `${activeSite.baseUrl}/${slug}`;
 
       // v3 test flag: answer with the published_url we would have used, but do not
       // save, publish, or expose the page (sitemap/robots stay untouched).
       if (isTest) {
         console.log(
-          `[contentengine] ${event} test: acknowledging ${slug} -> ${publishedUrl} (not saved)`
+          `[contentengine] ${event} test[${activeSite.key}]: acknowledging ${slug} -> ${publishedUrl} (not saved)`
         );
         res.json({ published_url: publishedUrl });
         return;
       }
 
       // related_articles: internal links contentengine expects on the live page for crawl paths
-      const fullHtml = buildPublishedHtml(post, payload.related_articles);
-      await savePublishedPage(slug, fullHtml);
+      const fullHtml = buildPublishedHtml(post, payload.related_articles, activeSite);
+      await savePublishedPage(slug, fullHtml, activeSite.collection);
 
       // Sitemap + robots are generated on the fly from Firestore by
       // publishedSitemapXml / publishedRobotsTxt — no static file write needed.
       console.log(
-        `[contentengine] ${event}: ${slug} -> ${publishedUrl} (sitemap/robots will include via Firestore)`
+        `[contentengine] ${event}[${activeSite.key}]: ${slug} -> ${publishedUrl} (sitemap/robots will include via Firestore)`
       );
 
       res.json({
         published_url: publishedUrl,
-        sitemap_url: `${PUBLISHED_BASE_URL}/sitemap.xml`,
-        robots_url: `${PUBLISHED_BASE_URL}/robots.txt`,
+        sitemap_url: `${activeSite.baseUrl}/sitemap.xml`,
+        robots_url: `${activeSite.baseUrl}/robots.txt`,
       });
       return;
     }
@@ -626,9 +669,9 @@ contentengineApp.all(/.*/, async (req, res) => {
       const slug = sanitizeSlug(payload.post && payload.post.slug);
       if (slug) {
         try {
-          await db.collection(PUBLISHED_COLLECTION).doc(slug).delete();
+          await db.collection(activeSite.collection).doc(slug).delete();
           console.log(
-            `[contentengine] post.delete: removed ${slug} (dropped from sitemap/robots on next request)`
+            `[contentengine] post.delete[${activeSite.key}]: removed ${slug} (dropped from sitemap/robots on next request)`
           );
         } catch (delErr) {
           // Idempotent: still return 200
@@ -636,8 +679,8 @@ contentengineApp.all(/.*/, async (req, res) => {
       }
       res.json({
         ok: true,
-        sitemap_url: `${PUBLISHED_BASE_URL}/sitemap.xml`,
-        robots_url: `${PUBLISHED_BASE_URL}/robots.txt`,
+        sitemap_url: `${activeSite.baseUrl}/sitemap.xml`,
+        robots_url: `${activeSite.baseUrl}/robots.txt`,
       });
       return;
     }
@@ -682,6 +725,7 @@ exports.servePublishedPage = onRequest(
 
     const p = req.path || "";
     const host = getRequestHost(req);
+    const site = getSiteForRequest(req);
 
     // Match root-level slug or slug.html  (e.g. /my-post or /my-post.html)
     // IMPORTANT: skip the root "/" itself — hosting will serve index.html for that.
@@ -695,8 +739,8 @@ exports.servePublishedPage = onRequest(
 
     if (!slug) {
       // Still collapse alternate hosts hitting unknown paths toward the canonical site.
-      if (host && !isCanonicalPublishedHost(host)) {
-        redirectToPublishedCanonical(res, "/");
+      if (host && !isCanonicalPublishedHost(host, site)) {
+        redirectToPublishedCanonical(res, "/", site);
         return;
       }
       res.status(404).send("Not found");
@@ -706,25 +750,25 @@ exports.servePublishedPage = onRequest(
     const cleanPath = `/${slug}`;
 
     // Prefer a single host in the index (coindrop.website over coindropapp.web.app).
-    if (host && !isCanonicalPublishedHost(host)) {
-      redirectToPublishedCanonical(res, cleanPath);
+    if (host && !isCanonicalPublishedHost(host, site)) {
+      redirectToPublishedCanonical(res, cleanPath, site);
       return;
     }
 
     // Prefer clean URLs over .html twins (both used to 200 with identical bodies).
     if (requestedHtmlExt) {
-      redirectToPublishedCanonical(res, cleanPath);
+      redirectToPublishedCanonical(res, cleanPath, site);
       return;
     }
 
     try {
-      const page = await getPublishedPage(slug);
+      const page = await getPublishedPage(slug, site.collection);
       if (!page || !page.html) {
         res.status(404).send("Page not found");
         return;
       }
 
-      const canonicalHref = publishedCanonicalUrl(cleanPath);
+      const canonicalHref = publishedCanonicalUrl(cleanPath, site);
       const html = ensureCanonicalLink(page.html, canonicalHref);
 
       res.set("Content-Type", "text/html; charset=utf-8");
@@ -750,8 +794,9 @@ exports.publishedRobotsTxt = onRequest(
   },
   async (req, res) => {
     const host = getRequestHost(req);
-    if (host && !isCanonicalPublishedHost(host)) {
-      redirectToPublishedCanonical(res, "/robots.txt");
+    const site = getSiteForRequest(req);
+    if (host && !isCanonicalPublishedHost(host, site)) {
+      redirectToPublishedCanonical(res, "/robots.txt", site);
       return;
     }
 
@@ -763,7 +808,7 @@ exports.publishedRobotsTxt = onRequest(
       "User-agent: *",
       "Allow: /",
       "",
-      `Sitemap: ${PUBLISHED_BASE_URL}/sitemap.xml`,
+      `Sitemap: ${site.baseUrl}/sitemap.xml`,
       "",
     ].join("\n");
 
@@ -780,8 +825,9 @@ exports.publishedSitemapXml = onRequest(
   },
   async (req, res) => {
     const host = getRequestHost(req);
-    if (host && !isCanonicalPublishedHost(host)) {
-      redirectToPublishedCanonical(res, "/sitemap.xml");
+    const site = getSiteForRequest(req);
+    if (host && !isCanonicalPublishedHost(host, site)) {
+      redirectToPublishedCanonical(res, "/sitemap.xml", site);
       return;
     }
 
@@ -789,7 +835,7 @@ exports.publishedSitemapXml = onRequest(
     // Avoid sticky CDN/browser cache of old <loc> hosts after domain changes
     res.set("Cache-Control", "public, max-age=0, must-revalidate");
 
-    const entries = await getPublishedSitemapEntries();
+    const entries = await getPublishedSitemapEntries(site);
     res.status(200).send(buildSitemapXml(entries));
   }
 );

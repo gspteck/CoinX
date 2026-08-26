@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Local development static server only.
-// The real /coindrop/api/rankgoat-publish webhook and dynamic coindrop pages
+// The real /coindrop/api/contentengine-publish webhook and dynamic coindrop pages
 // run as Firebase Cloud Functions (see functions/index.js + firebase.json rewrites).
 
 // Security and SEO-friendly headers
@@ -56,5 +56,5 @@ app.use((req, res) => {
 
 app.listen(PORT, () => {
   console.log("Server started at http://localhost:" + PORT);
-  console.log("Note: /coindrop/api/rankgoat-publish webhook runs in Firebase Cloud Functions in production.");
+  console.log("Note: /coindrop/api/contentengine-publish webhook runs in Firebase Cloud Functions in production.");
 });

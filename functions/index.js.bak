@@ -3,33 +3,19 @@ const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 const express = require("express");
-const { extractMonolingualPost, pickTranslation, injectLanguageSelector } = require("./content-extract");
-
-// Re-export the compiled TS bot (v2 functions with secrets, lazy bot loading, etc.)
-const botExports = require("./lib/index.js");
-const {
-  xOAuthCallback,
-  stripeWebhook,
-  refreshXTokens,
-  publishScheduledPosts,
-  processLoops,
-  syncTopPosts,
-  pollAiVideoJobs,
-  telegramBot,
-} = botExports;
 
 admin.initializeApp();
 const db = admin.firestore();
 
 // === Published content configuration (makes functions reusable across projects) ===
 // Change these values (or load via functions config) when reusing for a future dedicated publishing site.
-const PUBLISHED_BASE_URL = "https://autox.network";
-const PUBLISHED_COLLECTION = "autoxPages";
+const PUBLISHED_BASE_URL = "https://coindrop.website";
+const PUBLISHED_COLLECTION = "coindropPages";
 // The root path for the "landing" of published content on the dedicated site.
 const PUBLISHED_LANDING = "/";
 // Hosts that may serve the same Firebase Hosting site (custom domain + default web.app).
 // Only the apex custom domain is canonical for SEO; others 301 here.
-const PUBLISHED_CANONICAL_HOSTS = new Set(["autox.network"]);
+const PUBLISHED_CANONICAL_HOSTS = new Set(["coindrop.website"]);
 
 // Lazily obtain the default storage bucket only when needed (media uploads).
 // This avoids errors during plain `require()` / syntax checks outside a real Firebase context.
@@ -46,12 +32,12 @@ const contentengineSecret = defineSecret("CONTENTENGINE_SECRET");
 
 // === contentengine contract v3 helpers ===
 
-function getContentEngineHeaders(req) {
+function getRankGoatHeaders(req) {
   // Header names are case-insensitive via req.get()
   return {
-    event: (req.get("X-ContentEngine-Event") || "").trim(),
-    timestamp: (req.get("X-ContentEngine-Timestamp") || "").trim(),
-    signature: (req.get("X-ContentEngine-Signature") || "").trim(),
+    event: (req.get("X-RankGoat-Event") || "").trim(),
+    timestamp: (req.get("X-RankGoat-Timestamp") || "").trim(),
+    signature: (req.get("X-RankGoat-Signature") || "").trim(),
   };
 }
 
@@ -62,7 +48,7 @@ function isTimestampFresh(tsStr) {
   return Math.abs(now - ts) <= 300; // 5 minutes
 }
 
-function verifyContentEngineSignature(rawBody, signatureHeader, secret) {
+function verifyRankGoatSignature(rawBody, signatureHeader, secret) {
   if (!secret || !signatureHeader || !rawBody) return false;
 
   // Accept "sha256=..." (case-insensitive on the prefix)
@@ -229,42 +215,39 @@ function buildPublishedHtml(post, relatedArticles) {
   }
 
   // Build a clean standalone HTML document
-      const ldScript = jsonLd
-        ? `<script type="application/ld+json">${jsonLd}</script>`
-        : "";
+  const ldScript = jsonLd
+    ? `<script type="application/ld+json">${jsonLd}</script>`
+    : "";
 
-      // Check if bodyHtml already starts with an h1 tag (ignoring leading whitespace)
-      const trimmedBody = bodyHtml.trim();
-      const bodyHasStartingH1 = /^<h1/i.test(trimmedBody);
-
-      return `<!DOCTYPE html>
-    <html lang="${escapeHtml(post.language || "en")}">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${escapeHtml(title)}</title>
-      ${description ? `<meta name="description" content="${escapeHtml(description)}">` : ""}
-      ${ldScript}
-      <style>
-        :root { color-scheme: light dark; }
-        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.7; max-width: 780px; margin: 40px auto; padding: 0 16px; }
-        img, figure, video { max-width: 100%; height: auto; display: block; }
-        pre, code { background: #f6f8fa; padding: 2px 6px; border-radius: 4px; }
-        h1, h2, h3 { line-height: 1.25; }
-        .related-articles { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; }
-        .related-articles h2 { font-size: 1.15rem; margin: 0 0 0.75rem; }
-        .related-articles ul { margin: 0; padding-left: 1.25rem; }
-        .related-articles li { margin: 0.35rem 0; }
-      </style>
-    </head>
-    <body>
-      <article>
-        ${bodyHasStartingH1 ? "" : `<h1>${escapeHtml(title)}</h1>`}
-        ${bodyHtml}
-      </article>
-      ${relatedHtml}
-    </body>
-  </html>`;
+  return `<!DOCTYPE html>
+<html lang="${escapeHtml(post.language || "en")}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(title)}</title>
+  <link rel="canonical" href="${escapeHtml(canonicalHref)}">
+  ${description ? `<meta name="description" content="${escapeHtml(description)}">` : ""}
+  ${ldScript}
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.7; max-width: 780px; margin: 40px auto; padding: 0 16px; }
+    img, figure, video { max-width: 100%; height: auto; display: block; }
+    pre, code { background: #f6f8fa; padding: 2px 6px; border-radius: 4px; }
+    h1, h2, h3 { line-height: 1.25; }
+    .related-articles { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; }
+    .related-articles h2 { font-size: 1.15rem; margin: 0 0 0.75rem; }
+    .related-articles ul { margin: 0; padding-left: 1.25rem; }
+    .related-articles li { margin: 0.35rem 0; }
+  </style>
+</head>
+<body>
+  <article>
+    <h1>${escapeHtml(title)}</h1>
+    ${bodyHtml}
+  </article>
+  ${relatedHtml}
+</body>
+</html>`;
 }
 
 function sanitizeSlug(raw) {
@@ -286,44 +269,14 @@ function isValidHtml(str) {
   return /<!doctype|<html|<head|<body/i.test(t);
 }
 
-async function savePublishedPage(slug, html, extra = {}) {
+async function savePublishedPage(slug, html) {
   const now = admin.firestore.FieldValue.serverTimestamp();
-  const doc = {
+  await db.collection(PUBLISHED_COLLECTION).doc(slug).set({
     slug,
     html,
     publishedAt: now,
     updatedAt: now,
-  };
-  if (extra.translations) doc.translations = extra.translations;
-  if (extra.related_articles) doc.related_articles = extra.related_articles;
-  await db.collection(PUBLISHED_COLLECTION).doc(slug).set(doc, { merge: true });
-}
-
-/** Render a published page for a requested language, falling back to stored
- *  english html when translations aren't stored (older docs). */
-function renderPublishedPage(page, lang, canonicalHref) {
-  if (!page) return null;
-  if (page.translations && typeof page.translations === "object") {
-    const translation = pickTranslation(page, lang);
-    if (translation) {
-      const monoPost = {
-        title: translation.title || "Published Page",
-        meta_description: translation.meta_description || "",
-        body_html: translation.body_html || "",
-        json_ld: translation.json_ld || null,
-        language: lang,
-      };
-      let html = buildPublishedHtml(monoPost, page.related_articles);
-      html = injectLanguageSelector(html, page.translations, lang);
-      return ensureCanonicalLink(html, canonicalHref);
-    }
-  }
-  if (!page.html) return null;
-  let html = page.html;
-  if (page.translations && typeof page.translations === "object") {
-    html = injectLanguageSelector(html, page.translations, "en");
-  }
-  return ensureCanonicalLink(html, canonicalHref);
+  }, { merge: true });
 }
 
 async function getPublishedPage(slug) {
@@ -424,9 +377,9 @@ function buildSitemapXml(entries) {
 // === 1. Webhook: POST /coindrop/api/contentengine-publish (contentengine contract v3) ===
 //
 // Correct implementation per contentengine webhook spec:
-// - Verify X-ContentEngine-Signature (sha256=<hex>) against the **raw body bytes** (constant-time HMAC)
-// - Check X-ContentEngine-Timestamp (reject if >5 min old)
-// - Branch on X-ContentEngine-Event (or payload.event): ping | media.upload | post.publish | post.update | post.delete
+// - Verify X-RankGoat-Signature (sha256=<hex>) against the **raw body bytes** (constant-time HMAC)
+// - Check X-RankGoat-Timestamp (reject if >5 min old)
+// - Branch on X-RankGoat-Event (or payload.event): ping | media.upload | post.publish | post.update | post.delete
 // - v3: honour top-level `test` — full-shaped connection check; reply normally but do not save/publish
 // - Always answer with the documented JSON shape within ~30s
 //
@@ -539,7 +492,7 @@ contentengineApp.all(/.*/, async (req, res) => {
     rawBody = Buffer.alloc(0);
   }
 
-  const headers = getContentEngineHeaders(req);
+  const headers = getRankGoatHeaders(req);
 
   // Timestamp freshness check (5 minutes)
   if (!isTimestampFresh(headers.timestamp)) {
@@ -548,7 +501,7 @@ contentengineApp.all(/.*/, async (req, res) => {
   }
 
   // === SIGNATURE VERIFICATION (must be on raw bytes, constant time) ===
-  const sigOk = verifyContentEngineSignature(rawBody, headers.signature, secret);
+  const sigOk = verifyRankGoatSignature(rawBody, headers.signature, secret);
   if (!sigOk) {
     // Safe diagnostic logging (never log the secret itself)
     console.warn("[contentengine] signature verification FAILED", {
@@ -631,10 +584,6 @@ contentengineApp.all(/.*/, async (req, res) => {
         return;
       }
 
-      // --- Extract monolingual content from translations (contentengine sends
-      // the body under post.translations) ---
-      const monoPost = extractMonolingualPost(post);
-
       // Use the generic published base URL (root-level slug on the dedicated hosting target)
       const publishedUrl = `${PUBLISHED_BASE_URL}/${slug}`;
 
@@ -649,11 +598,8 @@ contentengineApp.all(/.*/, async (req, res) => {
       }
 
       // related_articles: internal links contentengine expects on the live page for crawl paths
-      const fullHtml = buildPublishedHtml(monoPost, payload.related_articles);
-      await savePublishedPage(slug, fullHtml, {
-        translations: post.translations || null,
-        related_articles: payload.related_articles || [],
-      });
+      const fullHtml = buildPublishedHtml(post, payload.related_articles);
+      await savePublishedPage(slug, fullHtml);
 
       // Sitemap + robots are generated on the fly from Firestore by
       // publishedSitemapXml / publishedRobotsTxt — no static file write needed.
@@ -773,22 +719,13 @@ exports.servePublishedPage = onRequest(
 
     try {
       const page = await getPublishedPage(slug);
-      if (!page || (!page.html && !page.translations)) {
+      if (!page || !page.html) {
         res.status(404).send("Page not found");
         return;
       }
 
       const canonicalHref = publishedCanonicalUrl(cleanPath);
-      // Resolve requested language from ?lang= (default en). Accept only a clean
-      // 2-letter code; ignore anything else (falls back to en anyway).
-      const reqLang = (req.query && req.query.lang && /^[a-z]{2,3}$/i.test(String(req.query.lang)))
-        ? String(req.query.lang).toLowerCase()
-        : "en";
-      const html = renderPublishedPage(page, reqLang, canonicalHref);
-      if (!html) {
-        res.status(404).send("Page not found");
-        return;
-      }
+      const html = ensureCanonicalLink(page.html, canonicalHref);
 
       res.set("Content-Type", "text/html; charset=utf-8");
       res.set("Cache-Control", "public, max-age=300");
@@ -856,15 +793,4 @@ exports.publishedSitemapXml = onRequest(
     res.status(200).send(buildSitemapXml(entries));
   }
 );
-
-// Re-export all bot functions so they are discovered and deployed by Firebase
-// (the lib/index.js already defines them as v2 https/onRequest with proper secrets).
-exports.xOAuthCallback = xOAuthCallback;
-exports.stripeWebhook = stripeWebhook;
-exports.refreshXTokens = refreshXTokens;
-exports.publishScheduledPosts = publishScheduledPosts;
-exports.processLoops = processLoops;
-exports.syncTopPosts = syncTopPosts;
-exports.pollAiVideoJobs = pollAiVideoJobs;
-exports.telegramBot = telegramBot;
 

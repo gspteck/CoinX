@@ -1,180 +1,68 @@
 {
-  "hosting": [
-    {
-      "target": "main",
-      "public": "public",
-      "ignore": [
-        "firebase.json",
-        "**/.*",
-        "**/node_modules/**"
-      ],
-      "headers": [
-        {
-          "source": "**/*.@(js|css|png|jpg|jpeg|gif|svg|ico|webp)",
-          "headers": [
-            {
-              "key": "Cache-Control",
-              "value": "public, max-age=604800, immutable"
-            }
-          ]
-        },
-        {
-          "source": "**/*.@(html|xml|txt)",
-          "headers": [
-            {
-              "key": "Cache-Control",
-              "value": "public, max-age=3600"
-            },
-            {
-              "key": "X-Content-Type-Options",
-              "value": "nosniff"
-            },
-            {
-              "key": "X-Frame-Options",
-              "value": "SAMEORIGIN"
-            },
-            {
-              "key": "Referrer-Policy",
-              "value": "strict-origin-when-cross-origin"
-            }
-          ]
-        }
-      ],
-      "rewrites": [
-        {
-          "source": "/coindrop",
-          "destination": "/views/coindrop.html"
-        },
-        {
-          "source": "/api/contentengine-publish",
-          "function": "contentenginePublish",
-          "region": "us-central1"
-        },
-        {
-          "source": "/sitemap.xml",
-          "function": "publishedSitemapXml",
-          "region": "us-central1"
-        },
-        {
-          "source": "/robots.txt",
-          "function": "publishedRobotsTxt",
-          "region": "us-central1"
-        },
-        {
-          "source": "/**",
-          "function": "servePublishedPage",
-          "region": "us-central1"
-        }
-      ],
-      "cleanUrls": true
-    },
-    {
-      "target": "coindrop",
-      "public": "coindrop-public",
-      "ignore": [
-        "firebase.json",
-        "**/.*",
-        "**/node_modules/**",
-        "sitemap.xml"
-      ],
-      "headers": [
-        {
-          "source": "**/*.@(js|css|png|jpg|jpeg|gif|svg|ico|webp)",
-          "headers": [
-            {
-              "key": "Cache-Control",
-              "value": "public, max-age=604800, immutable"
-            }
-          ]
-        },
-        {
-          "source": "**/*.@(html|xml|txt)",
-          "headers": [
-            {
-              "key": "Cache-Control",
-              "value": "public, max-age=3600"
-            },
-            {
-              "key": "X-Content-Type-Options",
-              "value": "nosniff"
-            },
-            {
-              "key": "X-Frame-Options",
-              "value": "SAMEORIGIN"
-            },
-            {
-              "key": "Referrer-Policy",
-              "value": "strict-origin-when-cross-origin"
-            }
-          ]
-        },
-        {
-          "source": "/sitemap.xml",
-          "headers": [
-            {
-              "key": "Cache-Control",
-              "value": "public, max-age=0, must-revalidate"
-            },
-            {
-              "key": "Content-Type",
-              "value": "application/xml; charset=utf-8"
-            }
-          ]
-        },
-        {
-          "source": "/robots.txt",
-          "headers": [
-            {
-              "key": "Cache-Control",
-              "value": "public, max-age=0, must-revalidate"
-            },
-            {
-              "key": "Content-Type",
-              "value": "text/plain; charset=utf-8"
-            }
-          ]
-        }
-      ],
-      "rewrites": [
-        {
-          "source": "/api/contentengine-publish",
-          "function": "contentenginePublish",
-          "region": "us-central1"
-        },
-        {
-          "source": "/sitemap.xml",
-          "function": "publishedSitemapXml",
-          "region": "us-central1"
-        },
-        {
-          "source": "/robots.txt",
-          "function": "publishedRobotsTxt",
-          "region": "us-central1"
-        },
-        {
-          "source": "/",
-          "destination": "/index.html"
-        },
-        {
-          "source": "/**",
-          "function": "servePublishedPage",
-          "region": "us-central1"
-        }
-      ],
-      "cleanUrls": true
-    }
-  ],
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ]
-    }
-  ]
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/contentengine-publish",
+        "function": "contentenginePublish",
+        "region": "us-central1"
+      },
+      {
+        "source": "/sitemap.xml",
+        "function": "publishedSitemapXml",
+        "region": "us-central1"
+      },
+      {
+        "source": "/robots.txt",
+        "function": "publishedRobotsTxt",
+        "region": "us-central1"
+      },
+      {
+        "source": "/**",
+        "function": "servePublishedPage",
+        "region": "us-central1"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css|png|jpg|jpeg|gif|svg|ico|webp)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=604800, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(html|xml|txt)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600"
+          },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "SAMEORIGIN"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          }
+        ]
+      }
+    ],
+    "cleanUrls": true
+  },
+  "functions": {
+    "source": "functions"
+  }
 }

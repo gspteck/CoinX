@@ -1,0 +1,11 @@
+# CoinX main site robots.txt
+# Note: Published CoinDrop pages now live on the dedicated coindrop site (coindropapp).
+
+User-agent: *
+Allow: /
+
+# Disallow private or non-public assets
+Disallow: /assets/private/
+
+# Sitemap (main site only)
+Sitemap: https://coinx.gspteck.com/sitemap.xml

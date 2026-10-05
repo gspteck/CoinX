@@ -83,6 +83,26 @@
       gtag("config", "AW-16967838342");
     </script>
 
+    <!-- Firebase App + Google Analytics -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyCSauKYPO5y7JwCV-w_u3TCgIGk8-bOQXQ",
+        authDomain: "coinx-c08b6.firebaseapp.com",
+        databaseURL: "https://coinx-c08b6-default-rtdb.firebaseio.com",
+        projectId: "coinx-c08b6",
+        storageBucket: "coinx-c08b6.firebasestorage.app",
+        messagingSenderId: "533685430180",
+        appId: "1:533685430180:web:4394efe6abca2c65b54331",
+        measurementId: "G-58VR1SGD7Z",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+    </script>
+
     <!-- JSON-LD Structured Data: Organization + WebSite + Projects -->
     <script type="application/ld+json">
       {

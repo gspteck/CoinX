@@ -5,19 +5,6 @@ const crypto = require("crypto");
 const express = require("express");
 const { extractMonolingualPost, pickTranslation, injectLanguageSelector } = require("./content-extract");
 
-// Re-export the compiled TS bot (v2 functions with secrets, lazy bot loading, etc.)
-const botExports = require("./lib/index.js");
-const {
-  xOAuthCallback,
-  stripeWebhook,
-  refreshXTokens,
-  publishScheduledPosts,
-  processLoops,
-  syncTopPosts,
-  pollAiVideoJobs,
-  telegramBot,
-} = botExports;
-
 admin.initializeApp();
 const db = admin.firestore();
 
@@ -856,15 +843,4 @@ exports.publishedSitemapXml = onRequest(
     res.status(200).send(buildSitemapXml(entries));
   }
 );
-
-// Re-export all bot functions so they are discovered and deployed by Firebase
-// (the lib/index.js already defines them as v2 https/onRequest with proper secrets).
-exports.xOAuthCallback = xOAuthCallback;
-exports.stripeWebhook = stripeWebhook;
-exports.refreshXTokens = refreshXTokens;
-exports.publishScheduledPosts = publishScheduledPosts;
-exports.processLoops = processLoops;
-exports.syncTopPosts = syncTopPosts;
-exports.pollAiVideoJobs = pollAiVideoJobs;
-exports.telegramBot = telegramBot;
 

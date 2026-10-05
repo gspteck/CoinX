@@ -117,8 +117,8 @@
       ],
       "rewrites": [
         {
-          "source": "/api/rankgoat-publish",
-          "function": "rankgoatPublish",
+          "source": "/api/contentengine-publish",
+          "function": "contentenginePublish",
           "region": "us-central1"
         },
         {

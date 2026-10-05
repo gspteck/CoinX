@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  LOCAL / DOCS ONLY — not deployed (see firebase.json coindrop ignore).
+  Production serves /sitemap.xml via the publishedSitemapXml Cloud Function,
+  which includes the landing page plus every slug in coindropPages (updated
+  automatically when RankGoat publishes, updates, or deletes a post).
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://coindrop.website/</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

@@ -18,6 +18,7 @@ const SITES = {
     collection: "coindropPages",
     canonicalHosts: ["coindrop.website"],
     mediaPrefix: "coindrop-media",
+    richAdsSiteId: "407900",
   },
   coinx: {
     key: "coinx",
@@ -25,6 +26,7 @@ const SITES = {
     collection: "coinxPages",
     canonicalHosts: ["coinx.gspteck.com"],
     mediaPrefix: "coinx-media",
+    richAdsSiteId: "407899",
   },
 };
 const DEFAULT_SITE = SITES.coindrop;
@@ -216,6 +218,22 @@ function ensureCanonicalLink(html, canonicalHref) {
   return `${linkTag}\n${html}`;
 }
 
+
+/**
+ * Inject RichAds pop script into <head> once (idempotent).
+ * Posts only — call from buildPublishedHtml / servePublishedPage.
+ * Never use on static landings (index.html, marketing, policy, etc.).
+ */
+function ensureRichAdsInHead(html, siteId) {
+  if (!html || typeof html !== "string" || !siteId) return html;
+  if (/richads-pu-ob\.js/i.test(html)) return html;
+  const tag = `<script src="https://richinfo.co/richpartners/pops/js/richads-pu-ob.js" data-pubid="987835" data-siteid="${String(siteId)}" async data-cfasync="false"></script>`;
+  if (/<head[^>]*>/i.test(html)) {
+    return html.replace(/<head[^>]*>/i, (m) => `${m}\n  ${tag}`);
+  }
+  return `${tag}\n${html}`;
+}
+
 function buildPublishedHtml(post, relatedArticles, site) {
   const s = site || DEFAULT_SITE;
   const title = post.title || "Published Page";
@@ -250,7 +268,7 @@ function buildPublishedHtml(post, relatedArticles, site) {
         html = html + relatedHtml;
       }
     }
-    return ensureCanonicalLink(html, canonicalHref);
+    return ensureRichAdsInHead(ensureCanonicalLink(html, canonicalHref), s.richAdsSiteId);
   }
 
   // Build a clean standalone HTML document
@@ -258,7 +276,7 @@ function buildPublishedHtml(post, relatedArticles, site) {
     ? `<script type="application/ld+json">${jsonLd}</script>`
     : "";
 
-  return `<!DOCTYPE html>
+  return ensureRichAdsInHead(`<!DOCTYPE html>
 <html lang="${escapeHtml(post.language || "en")}">
 <head>
   <meta charset="UTF-8">
@@ -286,7 +304,7 @@ function buildPublishedHtml(post, relatedArticles, site) {
   </article>
   ${relatedHtml}
 </body>
-</html>`;
+</html>`, s.richAdsSiteId);
 }
 
 function sanitizeSlug(raw) {
@@ -769,7 +787,10 @@ exports.servePublishedPage = onRequest(
       }
 
       const canonicalHref = publishedCanonicalUrl(cleanPath, site);
-      const html = ensureCanonicalLink(page.html, canonicalHref);
+      const html = ensureRichAdsInHead(
+        ensureCanonicalLink(page.html, canonicalHref),
+        site.richAdsSiteId
+      );
 
       res.set("Content-Type", "text/html; charset=utf-8");
       res.set("Cache-Control", "public, max-age=300");

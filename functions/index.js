@@ -19,6 +19,9 @@ const SITES = {
     canonicalHosts: ["coindrop.website"],
     mediaPrefix: "coindrop-media",
     richAdsSiteId: "407900",
+    name: "CoinDrop",
+    // Default Firebase Hosting hosts for this site's target (serve-side mapping only).
+    altHosts: ["coindropapp.web.app", "coindropapp.firebaseapp.com"],
   },
   coinx: {
     key: "coinx",
@@ -27,6 +30,8 @@ const SITES = {
     canonicalHosts: ["coinx.gspteck.com"],
     mediaPrefix: "coinx-media",
     richAdsSiteId: "407899",
+    name: "CoinX",
+    altHosts: ["coinx-c08b6.web.app", "coinx-c08b6.firebaseapp.com"],
   },
 };
 const DEFAULT_SITE = SITES.coindrop;
@@ -397,6 +402,12 @@ async function getPublishedSitemapEntries(site) {
       priority: "0.9",
       changefreq: "monthly",
     },
+    {
+      loc: `${s.baseUrl}${BLOG_PATH}`,
+      lastmod: today,
+      priority: "0.7",
+      changefreq: "daily",
+    },
   ];
   try {
     const pages = await listPublishedPagesForSitemap(s.collection);
@@ -433,6 +444,228 @@ function buildSitemapXml(entries) {
   }
   xml.push("</urlset>");
   return xml.join("\n");
+}
+
+
+// === Crawlable internal links (server-rendered, no JS) ===
+// Homepage "Latest articles", per-article "Related articles", and a plain /blog archive.
+// All are rendered at serve time from Firestore so existing posts get them without
+// rewriting stored bodies. Landings (homepage, /blog) never get RichAds.
+
+const fs = require("fs");
+const path = require("path");
+
+const BLOG_PATH = "/blog";
+const HOME_LATEST_COUNT = 5;
+const RELATED_COUNT = 5;
+const INDEX_CACHE_TTL_MS = 5 * 60 * 1000;
+
+// Homepage templates per site; each has <!--LATEST_ARTICLES_ITEMS--> and <!--ARTICLE_COUNT-->.
+const HOME_TEMPLATE_FILES = { coinx: "coinx-home.html", coindrop: "coindrop-home.html" };
+const _homeTemplates = {};
+function getHomeTemplate(site) {
+  const file = HOME_TEMPLATE_FILES[site.key];
+  if (!file) return null;
+  if (!_homeTemplates[site.key]) {
+    _homeTemplates[site.key] = fs.readFileSync(path.join(__dirname, "templates", file), "utf8");
+  }
+  return _homeTemplates[site.key];
+}
+
+/** Serve-side site resolution that also maps the default *.web.app hosts to their site. */
+function getServeSiteForRequest(req) {
+  const host = getRequestHost(req);
+  for (const key of Object.keys(SITES)) {
+    if ((SITES[key].altHosts || []).includes(host)) return SITES[key];
+  }
+  return getSiteForRequest(req);
+}
+
+function decodeBasicEntities(str) {
+  return String(str || "")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&#x27;|&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
+function extractTitleFromHtml(html, slug) {
+  const m = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html || "");
+  const t = m ? decodeBasicEntities(m[1]).replace(/\s+/g, " ").trim() : "";
+  if (t) return t;
+  return String(slug || "")
+    .split("-")
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(" ");
+}
+
+function extractDescriptionFromHtml(html) {
+  const m = /<meta\b[^>]*\bname\s*=\s*["']description["'][^>]*>/i.exec(html || "");
+  if (!m) return "";
+  const c = /\bcontent\s*=\s*"([^"]*)"/i.exec(m[0]) || /\bcontent\s*=\s*'([^']*)'/i.exec(m[0]);
+  return c ? decodeBasicEntities(c[1]).trim() : "";
+}
+
+function tsToMillis(ts) {
+  if (!ts) return 0;
+  if (typeof ts.toMillis === "function") return ts.toMillis();
+  if (typeof ts.toDate === "function") return ts.toDate().getTime();
+  if (ts instanceof Date) return ts.getTime();
+  return 0;
+}
+
+const RELATED_STOPWORDS = new Set([
+  "a", "an", "and", "the", "of", "for", "to", "in", "on", "with", "vs", "your",
+  "how", "what", "why", "is", "are", "by", "from", "at", "or", "that", "this",
+  "it", "be", "you", "do", "explained", "guide", "2024", "2025", "2026", "2027",
+]);
+
+function slugTokens(slug) {
+  return new Set(
+    String(slug || "")
+      .split("-")
+      .filter((t) => t && t.length > 1 && !RELATED_STOPWORDS.has(t) && !/^\d+$/.test(t))
+  );
+}
+
+const _articleIndexCache = {};
+
+/**
+ * Lightweight index of every published page for a site (newest first).
+ * Cached per instance for a few minutes; new publishes show up within the TTL.
+ * @returns {Promise<Array<{slug:string,title:string,description:string,ms:number,url:string,tokens:Set<string>}>>}
+ */
+async function getArticleIndex(site) {
+  const s = site || DEFAULT_SITE;
+  const cached = _articleIndexCache[s.key];
+  if (cached && Date.now() - cached.at < INDEX_CACHE_TTL_MS) return cached.items;
+  const snap = await db.collection(s.collection).get();
+  const items = [];
+  for (const d of snap.docs) {
+    const slug = sanitizeSlug(d.id);
+    if (!slug || slug !== d.id) continue;
+    const data = d.data() || {};
+    if (!data.html) continue;
+    items.push({
+      slug,
+      title: extractTitleFromHtml(data.html, slug),
+      description: extractDescriptionFromHtml(data.html),
+      ms: tsToMillis(data.publishedAt) || tsToMillis(data.updatedAt),
+      url: `${s.baseUrl}/${slug}`,
+      tokens: slugTokens(slug),
+    });
+  }
+  items.sort((a, b) => b.ms - a.ms || a.slug.localeCompare(b.slug));
+  _articleIndexCache[s.key] = { at: Date.now(), items };
+  return items;
+}
+
+/** 3-5 related articles: keyword overlap on slug tokens, ties and fill by recency. */
+function pickRelatedArticles(index, slug, count) {
+  const n = count || RELATED_COUNT;
+  const self = index.find((a) => a.slug === slug);
+  const selfTokens = self ? self.tokens : slugTokens(slug);
+  const scored = index
+    .filter((a) => a.slug !== slug)
+    .map((a, i) => {
+      let score = 0;
+      for (const t of a.tokens) if (selfTokens.has(t)) score += 1;
+      return { a, score, i };
+    });
+  scored.sort((x, y) => y.score - x.score || x.i - y.i);
+  return scored.slice(0, n).map((x) => x.a);
+}
+
+function formatDate(ms) {
+  if (!ms) return "";
+  return new Date(ms).toISOString().split("T")[0];
+}
+
+/** Inject a related-articles block + archive nav into a stored article at serve time. */
+function ensureServeTimeInternalLinks(html, index, slug, site) {
+  if (!html || typeof html !== "string") return html;
+  let block = "";
+  // Posts published with contentengine related_articles already carry a block; don't duplicate.
+  if (!/class\s*=\s*["']related-articles["']/i.test(html)) {
+    const related = pickRelatedArticles(index, slug, RELATED_COUNT);
+    if (related.length > 0) {
+      block += buildRelatedArticlesHtml(related.map((a) => ({ title: a.title, url: a.url })));
+    }
+  }
+  if (!/data-archive-nav/i.test(html)) {
+    block += `
+  <nav class="archive-nav" data-archive-nav aria-label="More articles">
+    <p><a href="${escapeHtml(site.baseUrl)}/">${escapeHtml(site.name || "Home")} home</a> &middot; <a href="${escapeHtml(site.baseUrl + BLOG_PATH)}">All articles</a></p>
+  </nav>`;
+  }
+  if (!block) return html;
+  const idx = html.toLowerCase().lastIndexOf("</body>");
+  if (idx === -1) return html + block;
+  return `${html.slice(0, idx)}${block}\n${html.slice(idx)}`;
+}
+
+function buildLatestArticleItems(index) {
+  return index
+    .slice(0, HOME_LATEST_COUNT)
+    .map((a) => {
+      const date = formatDate(a.ms);
+      return `        <li><a href="${escapeHtml(a.url)}">${escapeHtml(a.title)}</a>${
+        date ? ` <time datetime="${date}">${date}</time>` : ""
+      }</li>`;
+    })
+    .join("\n");
+}
+
+function buildHomeHtml(index, site) {
+  const tpl = getHomeTemplate(site);
+  if (!tpl) return null;
+  return tpl
+    .replace("<!--LATEST_ARTICLES_ITEMS-->", buildLatestArticleItems(index))
+    .replace(/<!--ARTICLE_COUNT-->/g, String(index.length));
+}
+
+function buildBlogArchiveHtml(index, site) {
+  const name = site.name || "Articles";
+  const canonical = `${site.baseUrl}${BLOG_PATH}`;
+  const title = `All ${name} articles`;
+  const items = index
+    .map((a) => {
+      const date = formatDate(a.ms);
+      return `      <li><a href="${escapeHtml(a.url)}">${escapeHtml(a.title)}</a>${
+        date ? ` <time datetime="${date}">${date}</time>` : ""
+      }${a.description ? `<br><span class="desc">${escapeHtml(a.description)}</span>` : ""}</li>`;
+    })
+    .join("\n");
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(title)}</title>
+  <link rel="canonical" href="${escapeHtml(canonical)}">
+  <meta name="description" content="${escapeHtml(`Every published ${name} article, newest first.`)}">
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; max-width: 780px; margin: 40px auto; padding: 0 16px; }
+    ul { padding-left: 1.25rem; }
+    li { margin: 0.75rem 0; }
+    time { color: #6b7280; font-size: 0.9em; margin-left: 0.25rem; }
+    .desc { color: #6b7280; font-size: 0.95em; }
+  </style>
+</head>
+<body>
+  <nav><a href="${escapeHtml(site.baseUrl)}/">${escapeHtml(name)} home</a></nav>
+  <main>
+    <h1>${escapeHtml(title)}</h1>
+    <p>${index.length} articles, newest first.</p>
+    <ul>
+${items}
+    </ul>
+  </main>
+  <footer><p><a href="${escapeHtml(site.baseUrl)}/">${escapeHtml(name)} home</a> &middot; <a href="${escapeHtml(site.baseUrl)}/sitemap.xml">Sitemap</a></p></footer>
+</body>
+</html>`;
 }
 
 // === 1. Webhook: POST /coindrop/api/contentengine-publish (contentengine contract v3) ===
@@ -746,7 +979,44 @@ exports.servePublishedPage = onRequest(
 
     const p = req.path || "";
     const host = getRequestHost(req);
-    const site = getSiteForRequest(req);
+    const site = getServeSiteForRequest(req);
+
+    // Landings rendered here (no RichAds): site homepages and the /blog archive.
+    const isHome = p === "" || p === "/";
+    const isIndexHtml = /^\/index(\.html)?$/i.test(p);
+    const isBlog = /^\/blog\/?$/i.test(p) || /^\/blog\.html$/i.test(p);
+    if (isIndexHtml) {
+      redirectToPublishedCanonical(res, "/", site);
+      return;
+    }
+    if (isHome || isBlog) {
+      const targetPath = isHome ? "/" : BLOG_PATH;
+      if (host && !isCanonicalPublishedHost(host, site)) {
+        redirectToPublishedCanonical(res, targetPath, site);
+        return;
+      }
+      if (isBlog && p !== BLOG_PATH) {
+        redirectToPublishedCanonical(res, BLOG_PATH, site);
+        return;
+      }
+      let index = [];
+      try {
+        index = await getArticleIndex(site);
+      } catch (err) {
+        console.error("[servePublishedPage] article index failed", err);
+      }
+      const html = isHome ? buildHomeHtml(index, site) : buildBlogArchiveHtml(index, site);
+      if (!html) {
+        res.status(404).send("Not found");
+        return;
+      }
+      const canonicalHref = publishedCanonicalUrl(targetPath, site);
+      res.set("Content-Type", "text/html; charset=utf-8");
+      res.set("Cache-Control", "public, max-age=300");
+      res.set("Link", `<${canonicalHref}>; rel="canonical"`);
+      res.status(200).send(html);
+      return;
+    }
 
     // Match root-level slug or slug.html  (e.g. /my-post or /my-post.html)
     // IMPORTANT: skip the root "/" itself — hosting will serve index.html for that.
@@ -790,8 +1060,15 @@ exports.servePublishedPage = onRequest(
       }
 
       const canonicalHref = publishedCanonicalUrl(cleanPath, site);
+      let pageHtml = page.html;
+      try {
+        const index = await getArticleIndex(site);
+        pageHtml = ensureServeTimeInternalLinks(pageHtml, index, slug, site);
+      } catch (linkErr) {
+        console.error("[servePublishedPage] related links failed", linkErr);
+      }
       const html = ensureRichAdsInHead(
-        ensureCanonicalLink(page.html, canonicalHref),
+        ensureCanonicalLink(pageHtml, canonicalHref),
         site.richAdsSiteId
       );
 

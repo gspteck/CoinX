@@ -156,10 +156,6 @@
           "region": "us-central1"
         },
         {
-          "source": "/",
-          "destination": "/index.html"
-        },
-        {
           "source": "/**",
           "function": "servePublishedPage",
           "region": "us-central1"

@@ -366,11 +366,14 @@ async function listPublishedPagesForSitemap(collection) {
 }
 
 // === Shared sitemap helpers (use PUBLISHED_* constants for reuse) ===
-// Served live by publishedSitemapXml / publishedRobotsTxt on each request.
+// Sitemap is served live by publishedSitemapXml on each request.
 // contentengine post.publish | post.update | post.delete write Firestore; the next
-// crawl of /sitemap.xml and /robots.txt picks up the new set of slugs automatically.
-// IMPORTANT: do not deploy static robots.txt / sitemap.xml on the coindrop
-// hosting target — Firebase serves exact static files before rewrites.
+// crawl of /sitemap.xml picks up the new set of slugs automatically.
+// robots.txt MUST be a static Hosting file per site (public/ + coindrop-public/).
+// The Cloud Functions framework returns empty 404 for path /robots.txt before
+// user code runs, so a Hosting rewrite to publishedRobotsTxt can never work.
+// Do not ignore or omit static robots.txt on deploy. Keep sitemap.xml ignored
+// so the dynamic function rewrite wins.
 
 function toIsoDate(value) {
   if (!value) return new Date().toISOString().split("T")[0];
@@ -662,10 +665,10 @@ contentengineApp.all(/.*/, async (req, res) => {
       const fullHtml = buildPublishedHtml(post, payload.related_articles, activeSite);
       await savePublishedPage(slug, fullHtml, activeSite.collection);
 
-      // Sitemap + robots are generated on the fly from Firestore by
-      // publishedSitemapXml / publishedRobotsTxt — no static file write needed.
+      // Sitemap is generated on the fly from Firestore by publishedSitemapXml.
+      // robots.txt is static per Hosting target (Allow:/ + host Sitemap).
       console.log(
-        `[contentengine] ${event}[${activeSite.key}]: ${slug} -> ${publishedUrl} (sitemap/robots will include via Firestore)`
+        `[contentengine] ${event}[${activeSite.key}]: ${slug} -> ${publishedUrl} (sitemap will include via Firestore)`
       );
 
       res.json({
@@ -689,7 +692,7 @@ contentengineApp.all(/.*/, async (req, res) => {
         try {
           await db.collection(activeSite.collection).doc(slug).delete();
           console.log(
-            `[contentengine] post.delete[${activeSite.key}]: removed ${slug} (dropped from sitemap/robots on next request)`
+            `[contentengine] post.delete[${activeSite.key}]: removed ${slug} (dropped from sitemap on next request)`
           );
         } catch (delErr) {
           // Idempotent: still return 200
@@ -803,10 +806,12 @@ exports.servePublishedPage = onRequest(
   }
 );
 
-// === 3. Published site robots.txt ===
-// Keep this simple: Allow: / already covers every slug. Dynamic per-slug Allow
-// lines are unnecessary and the static file in coindrop-public/robots.txt is
-// also deployed (Hosting serves exact static files before rewrites).
+// === 3. Published site robots.txt (kept for direct/debug calls only) ===
+// GCF/Cloud Run framework short-circuits HTTP path /robots.txt with an empty
+// 404 before this handler runs. Live sites serve static robots.txt from
+// Hosting (public/robots.txt and coindrop-public/robots.txt). Do not add a
+// Hosting rewrite to this function for /robots.txt — it will always 404.
+// Allow: / covers every slug; Sitemap points at the resolved site's sitemap.
 
 exports.publishedRobotsTxt = onRequest(
   {

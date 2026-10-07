@@ -7,8 +7,7 @@
         "firebase.json",
         "**/.*",
         "**/node_modules/**",
-        "sitemap.xml",
-        "robots.txt"
+        "sitemap.xml"
       ],
       "headers": [
         {
@@ -40,6 +39,19 @@
               "value": "strict-origin-when-cross-origin"
             }
           ]
+        },
+        {
+          "source": "/robots.txt",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
+            },
+            {
+              "key": "Content-Type",
+              "value": "text/plain; charset=utf-8"
+            }
+          ]
         }
       ],
       "rewrites": [
@@ -58,11 +70,6 @@
           "region": "us-central1"
         },
         {
-          "source": "/robots.txt",
-          "function": "publishedRobotsTxt",
-          "region": "us-central1"
-        },
-        {
           "source": "/**",
           "function": "servePublishedPage",
           "region": "us-central1"
@@ -77,8 +84,7 @@
         "firebase.json",
         "**/.*",
         "**/node_modules/**",
-        "sitemap.xml",
-        "robots.txt"
+        "sitemap.xml"
       ],
       "headers": [
         {
@@ -147,11 +153,6 @@
         {
           "source": "/sitemap.xml",
           "function": "publishedSitemapXml",
-          "region": "us-central1"
-        },
-        {
-          "source": "/robots.txt",
-          "function": "publishedRobotsTxt",
           "region": "us-central1"
         },
         {

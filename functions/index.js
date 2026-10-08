@@ -352,14 +352,19 @@ async function listPublishedSlugs(collection) {
   return snap.docs.map((d) => d.id);
 }
 
-/** @returns {Promise<Array<{ slug: string, lastmod: string }>>} */
+/**
+ * Unpublishing (reversible, no delete): set `unpublished: true` and move `html`
+ * to `unpublishedHtml`. servePublishedPage 404s and the homepage/blog index skip
+ * docs without `html`; the sitemap skips `unpublished: true`.
+ * @returns {Promise<Array<{ slug: string, lastmod: string }>>}
+ */
 async function listPublishedPagesForSitemap(collection) {
   const snap = await db
     .collection(collection || DEFAULT_SITE.collection)
-    .select("updatedAt", "publishedAt")
+    .select("updatedAt", "publishedAt", "unpublished")
     .get();
   const today = new Date().toISOString().split("T")[0];
-  return snap.docs.map((d) => {
+  return snap.docs.filter((d) => (d.data() || {}).unpublished !== true).map((d) => {
     const data = d.data() || {};
     const ts = data.updatedAt || data.publishedAt;
     let lastmod = today;

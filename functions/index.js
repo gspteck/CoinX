@@ -9,8 +9,9 @@ const db = admin.firestore();
 
 // === Published content configuration (multi-tenant: one Firebase project, N sites) ===
 // Each site is a separate brand/domain with its own Firestore collection and media prefix.
-// The webhook can disambiguate which site a publish targets via payload.site ("coindrop"|"coinx"),
-// falling back to request-host detection, then to DEFAULT_SITE (coindrop) for backward compat.
+// The webhook can disambiguate which site a publish targets via payload.site
+// ("coindrop"|"coinx"|"swappr"), falling back to request-host detection, then to
+// DEFAULT_SITE (coindrop) for backward compat.
 const SITES = {
   coindrop: {
     key: "coindrop",
@@ -32,6 +33,17 @@ const SITES = {
     richAdsSiteId: "407899",
     name: "CoinX",
     altHosts: ["coinx-c08b6.web.app", "coinx-c08b6.firebaseapp.com"],
+  },
+  swappr: {
+    key: "swappr",
+    baseUrl: "https://swappr.website",
+    collection: "swapprPages",
+    canonicalHosts: ["swappr.website"],
+    mediaPrefix: "swappr-media",
+    // Set when a RichAds site id exists; empty skips inject (ensureRichAdsInHead guards).
+    richAdsSiteId: "",
+    name: "Swappr",
+    altHosts: ["swapprapp.web.app", "swapprapp.firebaseapp.com"],
   },
 };
 const DEFAULT_SITE = SITES.coindrop;
@@ -59,7 +71,7 @@ function getSiteForRequest(req) {
   return (key && SITES[key]) || DEFAULT_SITE;
 }
 
-/** Resolve the site a webhook payload targets (payload.site: "coindrop"|"coinx"). */
+/** Resolve the site a webhook payload targets (payload.site: "coindrop"|"coinx"|"swappr"). */
 function siteFromPayload(payload) {
   if (!payload || typeof payload !== "object") return null;
   const key = payload.site;
@@ -466,7 +478,11 @@ const RELATED_COUNT = 5;
 const INDEX_CACHE_TTL_MS = 5 * 60 * 1000;
 
 // Homepage templates per site; each has <!--LATEST_ARTICLES_ITEMS--> and <!--ARTICLE_COUNT-->.
-const HOME_TEMPLATE_FILES = { coinx: "coinx-home.html", coindrop: "coindrop-home.html" };
+const HOME_TEMPLATE_FILES = {
+  coinx: "coinx-home.html",
+  coindrop: "coindrop-home.html",
+  swappr: "swappr-home.html",
+};
 const _homeTemplates = {};
 function getHomeTemplate(site) {
   const file = HOME_TEMPLATE_FILES[site.key];

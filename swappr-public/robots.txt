@@ -1,0 +1,8 @@
+# Deployed static robots.txt for swappr.website.
+# Allow: / covers the landing page and every published slug.
+# Sitemap locs are generated live by publishedSitemapXml from Firestore.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://swappr.website/sitemap.xml

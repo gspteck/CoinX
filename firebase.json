@@ -78,6 +78,10 @@
           "destination": "/views/coindrop.html"
         },
         {
+          "source": "/swappr",
+          "destination": "/views/swappr.html"
+        },
+        {
           "source": "/api/contentengine-publish",
           "function": "contentenginePublish",
           "region": "us-central1"
@@ -120,6 +124,101 @@
             {
               "key": "Cache-Control",
               "value": "public, max-age=31536000, immutable"
+            }
+          ]
+        },
+        {
+          "source": "/fonts/**",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=31536000, immutable"
+            }
+          ]
+        },
+        {
+          "source": "**/*.@(html|xml|txt)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            }
+          ]
+        },
+        {
+          "source": "/sitemap.xml",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=0, must-revalidate"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/xml; charset=utf-8"
+            }
+          ]
+        },
+        {
+          "source": "/robots.txt",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=0, must-revalidate"
+            },
+            {
+              "key": "Content-Type",
+              "value": "text/plain; charset=utf-8"
+            }
+          ]
+        }
+      ],
+      "rewrites": [
+        {
+          "source": "/api/contentengine-publish",
+          "function": "contentenginePublish",
+          "region": "us-central1"
+        },
+        {
+          "source": "/sitemap.xml",
+          "function": "publishedSitemapXml",
+          "region": "us-central1"
+        },
+        {
+          "source": "/**",
+          "function": "servePublishedPage",
+          "region": "us-central1"
+        }
+      ],
+      "cleanUrls": true
+    },
+    {
+      "target": "swappr",
+      "public": "swappr-public",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**",
+        "sitemap.xml"
+      ],
+      "headers": [
+        {
+          "source": "**/*.@(js|css|png|jpg|jpeg|gif|svg|ico|webp)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400, stale-while-revalidate=604800"
             }
           ]
         },

@@ -10,6 +10,9 @@
         ],
         "coindrop": [
           "coindropapp"
+        ],
+        "swappr": [
+          "swapprapp"
         ]
       }
     }

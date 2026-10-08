@@ -36,6 +36,10 @@ app.get("/coindrop", (req, res) => {
   res.sendFile(path.join(__dirname, "public/views/coindrop.html"));
 });
 
+app.get("/swappr", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/views/swappr.html"));
+});
+
 // Sitemap and robots (static base versions for local dev)
 // In production, /robots.txt and /sitemap.xml are served by global Cloud Functions
 // that dynamically include all published /coindrop pages.

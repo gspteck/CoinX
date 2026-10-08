@@ -41,7 +41,7 @@ const SITES = {
     canonicalHosts: ["swappr.website"],
     mediaPrefix: "swappr-media",
     // Set when a RichAds site id exists; empty skips inject (ensureRichAdsInHead guards).
-    richAdsSiteId: "",
+    richAdsSiteId: "409485",
     name: "Swappr",
     altHosts: ["swapprapp.web.app", "swapprapp.firebaseapp.com"],
   },

@@ -3,275 +3,104 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <title>Swappr: Fast Crypto Swaps Between Coins</title>
-
-    <meta
-      name="description"
-      content="Swap cryptocurrency quickly with Swappr. Exchange between coins, track orders, and complete swaps in a simple mobile app by CoinX."
-    />
-    <meta
-      name="keywords"
-      content="Swappr, crypto swap, cryptocurrency exchange, coin swap, crypto converter, FixedFloat, CoinX"
-    />
+    <link rel="preload" href="/fonts/ibm-plex-mono-latin-400-normal.08949f72.woff2" as="font" type="font/woff2" crossorigin />
+    <style>@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/ibm-plex-mono-latin-400-normal.08949f72.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/ibm-plex-mono-latin-700-normal.4f84d86c.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+.icon{display:inline-block;width:1em;height:1em;fill:currentColor;vertical-align:-0.125em;overflow:visible}:root{--bg:#0b1f1c;--surface:#11302b;--surface2:#163a34;--line:#24514a;--text:#f2f6f4;--muted:#a8bdb7;--accent:#f6a03a;--peach:#f2a07b;--ink:#0b1f1c;--radius:18px;--max:1120px}*,*::before,*::after{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Mono",ui-monospace,monospace;line-height:1.6;-webkit-font-smoothing:antialiased}a{color:inherit}img{max-width:100%;height:auto;display:block}.wrap{width:min(100% - 2.5rem,var(--max));margin:0 auto}.skip{position:absolute;left:-999px}.skip:focus{left:12px;top:12px;background:var(--text);color:var(--ink);padding:8px 12px;border-radius:8px;z-index:9}header.top{position:sticky;top:0;z-index:5;background:rgba(11,31,28,.92);backdrop-filter:saturate(1.2) blur(8px);border-bottom:1px solid var(--line)}.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:700;font-size:1.15rem}.brand img{width:36px;height:36px;border-radius:10px}.nav{display:flex;align-items:center;gap:22px;font-size:.88rem}.nav a{text-decoration:none;color:var(--muted)}.nav a:hover{color:var(--text)}.nav a.btn-primary,.nav a.btn-primary:hover{color:var(--ink)}.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 22px;border-radius:999px;font:inherit;font-weight:700;text-decoration:none;border:2px solid transparent;transition:transform .12s ease,background-color .12s ease}.btn:hover{transform:translateY(-1px)}.btn .icon{font-size:1.1em}.btn-primary{background:var(--accent);color:var(--ink)}.btn-primary:hover{background:#ffb257}.btn-ghost{border-color:var(--line);color:var(--text)}.btn-ghost:hover{border-color:var(--muted)}.btn-sm{padding:9px 16px;font-size:.85rem}.hero{padding:64px 0 56px}.hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}.eyebrow{display:inline-flex;align-items:center;gap:8px;margin:0 0 18px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;font-size:.78rem;color:var(--muted)}.eyebrow .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}h1{margin:0;font-size:clamp(2.1rem,5.2vw,3.6rem);line-height:1.05;letter-spacing:-.03em}h1 em{font-style:normal;color:var(--accent)}.lead{margin:20px 0 28px;font-size:clamp(1rem,1.6vw,1.12rem);color:var(--muted);max-width:36rem}.cta{display:flex;flex-wrap:wrap;gap:12px}.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:22px 0 0;padding:0;list-style:none;font-size:.8rem;color:var(--muted)}.facts li{display:inline-flex;align-items:center;gap:6px}.facts .icon{color:var(--accent)}.hero-media{justify-self:center;width:min(100%,340px)}.hero-media img{border-radius:28px;box-shadow:0 30px 80px rgba(0,0,0,.45)}section{padding:72px 0;border-top:1px solid var(--line)}.kicker{margin:0 0 10px;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}h2{margin:0 0 14px;font-size:clamp(1.5rem,3vw,2.15rem);line-height:1.15;letter-spacing:-.02em}.sub{margin:0 0 36px;color:var(--muted);max-width:42rem}.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin:0;padding:0;list-style:none;counter-reset:s}.steps li{position:relative;padding:22px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}.steps li::before{counter-increment:s;content:counter(s);display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;margin-bottom:14px;border-radius:50%;background:var(--accent);color:var(--ink);font-weight:700}.steps h3,.grid h3{margin:0 0 6px;font-size:1rem}.steps p,.grid p{margin:0;font-size:.88rem;color:var(--muted)}.shots{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 0 14px;margin:0;list-style:none}.shots li{flex:0 0 220px;scroll-snap-align:start}.shots img{border-radius:20px;border:1px solid var(--line)}.shots figcaption{margin-top:10px;font-size:.8rem;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}.card .icon{font-size:1.4rem;color:var(--accent);margin-bottom:12px}.safety{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.safety .card{background:var(--surface2)}.note{margin:26px 0 0;font-size:.8rem;color:var(--muted)}.faq details{border:1px solid var(--line);border-radius:14px;background:var(--surface);margin:0 0 12px}.faq summary{cursor:pointer;padding:18px 20px;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:16px}.faq summary::-webkit-details-marker{display:none}.faq summary::after{content:"+";color:var(--accent);font-size:1.2rem;line-height:1}.faq details[open] summary::after{content:"\2212"}.faq details p{margin:0;padding:0 20px 18px;color:var(--muted);font-size:.92rem}.articles ul{margin:0 0 18px;padding:0;list-style:none}.articles li{padding:14px 0;border-bottom:1px solid var(--line)}.articles li a{font-weight:700;text-decoration:none}.articles li a:hover{color:var(--accent)}.articles time{display:block;font-size:.78rem;color:var(--muted)}.more{color:var(--accent);font-weight:700;text-decoration:none}.final{text-align:center}.final .cta{justify-content:center}footer.site{padding:40px 0 48px;border-top:1px solid var(--line);font-size:.82rem;color:var(--muted)}footer.site .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px}footer.site nav{display:flex;flex-wrap:wrap;gap:18px}footer.site a{color:var(--muted)}footer.site a:hover{color:var(--text)}@media (min-width:1000px){.shots{overflow:visible}.shots li{flex:1 1 0;min-width:0}}@media (max-width:900px){.hero .wrap{grid-template-columns:1fr;gap:36px}.steps{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:repeat(2,1fr)}.nav a.hide-sm{display:none}}@media (max-width:560px){.wrap{width:min(100% - 2rem,var(--max))}.hero{padding:40px 0 44px}.steps,.grid,.safety{grid-template-columns:1fr}section{padding:56px 0}.nav{gap:14px}.nav a:not(.btn){display:none}.hero-media{width:min(100%,300px)}.btn{width:100%}.cta .btn{width:100%}.top .btn{width:auto}}</style>
+    <title>Swappr by CoinX: Swap Crypto Coins in One Place</title>
+    <meta name="description" content="Swappr is CoinX's free Android app for simple multi-coin crypto swaps. See how it works and get it on Google Play, or visit swappr.website." />
     <link rel="canonical" href="https://coinx.gspteck.com/swappr" />
-
-    <!-- Open Graph -->
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#0b1f1c" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="CoinX - Swappr" />
-    <meta
-      property="og:title"
-      content="Swappr: Fast Crypto Swaps Between Coins"
-    />
-    <meta
-      property="og:description"
-      content="Swap cryptocurrency quickly with Swappr. Simple mobile swaps between coins, built by CoinX."
-    />
+    <meta property="og:site_name" content="Swappr" />
     <meta property="og:url" content="https://coinx.gspteck.com/swappr" />
-    <meta
-      property="og:image"
-      content="https://coinx.gspteck.com/assets/swappr/swappr_logo.png"
-    />
-    <meta property="og:image:width" content="512" />
-    <meta property="og:image:height" content="512" />
-    <meta
-      property="og:image:alt"
-      content="Swappr app - Fast cryptocurrency swaps"
-    />
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@coindropapp" />
-    <meta name="twitter:creator" content="@coindropapp" />
-    <meta
-      name="twitter:title"
-      content="Swappr: Fast Crypto Swaps Between Coins"
-    />
-    <meta
-      name="twitter:description"
-      content="Exchange coins quickly on Android with Swappr by CoinX."
-    />
-    <meta
-      name="twitter:image"
-      content="https://coinx.gspteck.com/assets/swappr/swappr_logo.png"
-    />
-
-    <!-- Favicons -->
-    <link
-      rel="icon"
-      type="image/png"
-      href="../assets/swappr/swappr_logo.png"
-    />
-    <link rel="apple-touch-icon" href="../assets/swappr/swappr_logo.png" />
-
-    <link rel="stylesheet" href="../stylesheets/swapprstyle.css" />
-
-    <script
-      src="https://kit.fontawesome.com/363890c876.js"
-      crossorigin="anonymous"
-    ></script>
-
-    <!-- Google tag (gtag.js) -->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=AW-16967838342"
-    ></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag("js", new Date());
-      gtag("config", "AW-16967838342");
-    </script>
+    <meta property="og:title" content="Swappr by CoinX: Swap Crypto Coins in One Place" />
+    <meta property="og:description" content="Swappr is CoinX's free Android app for simple multi-coin crypto swaps. See how it works and get it on Google Play, or visit swappr.website." />
+    <meta property="og:image" content="https://swappr.website/assets/swappr/swappr_logo.png" />
+    <meta property="og:image:alt" content="Swappr logo" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Swappr by CoinX: Swap Crypto Coins in One Place" />
+    <meta name="twitter:description" content="Swappr is CoinX's free Android app for simple multi-coin crypto swaps. See how it works and get it on Google Play, or visit swappr.website." />
+    <meta name="twitter:image" content="https://swappr.website/assets/swappr/swappr_logo.png" />
+    <link rel="icon" type="image/png" href="/assets/opt/swappr_logo-192.18929bac.png" />
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Swappr: Crypto Coin Swap","alternateName":"Swappr","operatingSystem":"Android","applicationCategory":"FinanceApplication","contentRating":"Everyone","url":"https://swappr.website/","installUrl":"https://play.google.com/store/apps/details?id=com.gspteck.swappr","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"publisher":{"@type":"Organization","name":"GSPTeck","url":"https://gspteck.com/"}}</script>
     <script>
       function gtag_report_conversion(url) {
-        var callback = function () {
-          if (typeof url != "undefined") {
-            window.location = url;
-          }
-        };
-        gtag("event", "conversion", {
-          send_to: "AW-16967838342/nnhRCM6dnbcaEIbV8po_",
-          event_callback: callback,
-        });
+        var callback = function () { if (typeof url != "undefined") { window.location = url; } };
+        gtag("event", "conversion", { send_to: "AW-16967838342/nnhRCM6dnbcaEIbV8po_", event_callback: callback });
         return false;
       }
     </script>
-
-    <!-- Firebase App + Google Analytics -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics.js";
-
-      const firebaseConfig = {
-        apiKey: "AIzaSyCeT7kG8_F5ICzYkVoFVWFCQ7WeofjyQZY",
-        authDomain: "coinx-c08b6.firebaseapp.com",
-        databaseURL: "https://coinx-c08b6-default-rtdb.firebaseio.com",
-        projectId: "coinx-c08b6",
-        storageBucket: "coinx-c08b6.firebasestorage.app",
-        messagingSenderId: "533685430180",
-        appId: "1:533685430180:web:5344b59d05aae642b54331",
-        measurementId: "G-9E3K1P2H67",
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const analytics = getAnalytics(app);
-    </script>
-
-    <!-- JSON-LD Structured Data -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@graph": [
-          {
-            "@type": "SoftwareApplication",
-            "@id": "https://coinx.gspteck.com/swappr#app",
-            "name": "Swappr",
-            "applicationCategory": "FinanceApplication",
-            "operatingSystem": "Android",
-            "url": "https://coinx.gspteck.com/swappr",
-            "downloadUrl": "https://play.google.com/store/apps/details?id=com.gspteck.swappr",
-            "screenshot": [
-              "https://coinx.gspteck.com/assets/swappr/1.png",
-              "https://coinx.gspteck.com/assets/swappr/2.png",
-              "https://coinx.gspteck.com/assets/swappr/3.png"
-            ],
-            "description": "Swap cryptocurrency quickly with Swappr. Exchange between coins and complete swaps in a simple mobile app.",
-            "offers": {
-              "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "USD"
-            },
-            "publisher": {
-              "@type": "Organization",
-              "name": "CoinX",
-              "url": "https://coinx.gspteck.com/"
-            }
-          },
-          {
-            "@type": "Organization",
-            "@id": "https://coinx.gspteck.com/#organization",
-            "name": "CoinX",
-            "url": "https://coinx.gspteck.com/",
-            "logo": "https://coinx.gspteck.com/assets/swappr/swappr_logo.png",
-            "sameAs": ["https://x.com/coindropapp"]
-          }
-        ]
-      }
+    <script>
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+      gtag("js",new Date());gtag("config","AW-16967838342");
+      (function(){var d=false;function go(){if(d)return;d=true;var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=AW-16967838342";document.head.appendChild(s);var c={ apiKey: "AIzaSyCSauKYPO5y7JwCV-w_u3TCgIGk8-bOQXQ", authDomain: "coinx-c08b6.firebaseapp.com", databaseURL: "https://coinx-c08b6-default-rtdb.firebaseio.com", projectId: "coinx-c08b6", storageBucket: "coinx-c08b6.firebasestorage.app", messagingSenderId: "533685430180", appId: "1:533685430180:web:b7bb375c38d39935b54331", measurementId: "G-7P1CB2DTX9", };var b="https://www.gstatic.com/firebasejs/12.19.0/";Promise.all([import(b+"firebase-app.js"),import(b+"firebase-analytics.js")]).then(function(m){m[1].getAnalytics(m[0].initializeApp(c));}).catch(function(){});}
+      ["pointerdown","keydown","touchstart","scroll"].forEach(function(e){addEventListener(e,go,{once:true,passive:true});});
+      addEventListener("load",function(){setTimeout(go,3500);});})();
     </script>
   </head>
   <body>
-    <div id="nav-wrapper">
-      <h2>Swappr</h2>
-      <a href="https://coinx.gspteck.com/" target="_blank"
-        ><h5>A CoinX project</h5></a
-      >
-    </div>
-
-    <div id="top-container">
-      <div id="screenshot-wrapper">
-        <img
-          id="home-screenshot"
-          src="../assets/swappr/1.png"
-          alt="Swappr home screen for selecting coins to swap"
-        />
-        <div id="bg-screenshot-wrapper">
-          <img
-            class="bg-screenshots"
-            src="../assets/swappr/2.png"
-            alt="Swappr swap confirmation and rate screen"
-          />
-          <img
-            class="bg-screenshots"
-            src="../assets/swappr/3.png"
-            alt="Swappr order status and waiting screen"
-          />
+    <header class="top">
+      <div class="wrap">
+        <a class="brand" href="https://coinx.gspteck.com/swappr"><img src="/assets/opt/swappr_logo-40.37fd78ed.webp" srcset="/assets/opt/swappr_logo-40.37fd78ed.webp 40w, /assets/opt/swappr_logo-80.eefa8fe2.webp 80w" sizes="36px" width="40" height="40" alt="" ><span>Swappr</span></a>
+        <nav class="nav" aria-label="Primary">
+          <a href="https://coinx.gspteck.com/">CoinX</a>
+          <a href="https://swappr.website/">swappr.website</a>
+          <a class="btn btn-primary btn-sm" href="https://play.google.com/store/apps/details?id=com.gspteck.swappr" target="_blank" rel="noopener" onclick="gtag_report_conversion()"><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg><span>Get the app</span></a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <div class="hero">
+        <div class="wrap">
+          <div>
+            <p class="eyebrow"><span class="dot"></span>A CoinX project</p>
+            <h1>Swap crypto coins in <em>one place</em>.</h1>
+            <p class="lead">Swappr is a free Android app for simple multi-coin swaps. Pick the pair, check the estimated amount and limits, paste your address and send &mdash; no exchange terminal to learn.</p>
+            <div class="cta">
+              <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=com.gspteck.swappr" target="_blank" rel="noopener" onclick="gtag_report_conversion()"><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"/></svg><span>Get it on Google Play</span></a>
+              <a class="btn btn-ghost" href="https://swappr.website/">Visit swappr.website <svg class="icon" viewBox="0 0 448 512" aria-hidden="true" focusable="false"><path d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"/></svg></a>
+            </div>
+            <ul class="facts">
+              <li><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>Free to install</li>
+              <li><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>Fixed or float rate</li>
+              <li><svg class="icon" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>By GSPTeck</li>
+            </ul>
+          </div>
+          <div class="hero-media"><img src="/assets/opt/swappr-shot-1-160.021d710f.webp" srcset="/assets/opt/swappr-shot-1-160.021d710f.webp 160w, /assets/opt/swappr-shot-1-320.51b9ceec.webp 320w, /assets/opt/swappr-shot-1-480.f31c0f3d.webp 480w" sizes="(max-width: 560px) 300px, 340px" width="160" height="356" alt="Swappr app swap screen: USDT (TRC20) to Cosmos with estimated amount, limits and Swap now button" fetchpriority="high"></div>
         </div>
       </div>
-
-      <button onclick="openGooglePlayStore(); gtag_report_conversion()">
-        Download <i class="fa-brands fa-google-play"></i>
-      </button>
-    </div>
-
-    <div id="middle-container">
-      <h2>Crypto swaps made simple.</h2>
-      <h4>Exchange coins without the clutter.</h4>
-
-      <div class="feature-wrapper">
-        <div class="feature-container">
-          <img
-            src="../assets/swappr/icon.png"
-            alt="Choose coins to swap in Swappr"
-          />
-          <h4>Pick your pair.</h4>
+      <section>
+        <div class="wrap">
+          <p class="kicker">How it works</p>
+          <h2>From the coin you have to the coin you want</h2>
+          <ol class="steps">
+          <li><h3>Pick the pair</h3><p>Choose the coin you have and the coin you want. Each pair shows its minimum and maximum amount.</p></li>
+          <li><h3>Check the amount</h3><p>Enter how much you want to swap and see the estimated amount you receive. Choose Fixed Rate or Float Rate.</p></li>
+          <li><h3>Add your address</h3><p>Paste the receiving address for the coin you want, on the network shown (for example TRC20 or BEP20).</p></li>
+          <li><h3>Send and confirm</h3><p>Tap &ldquo;Swap now&rdquo;, send the exact amount to the deposit address (QR code and copy buttons included), then tap &ldquo;Sent&rdquo;.</p></li>
+        </ol>
+          <p class="note">Crypto markets move: Swappr does not guarantee profits, yields or returns. Always double-check the pair, amount and destination address before you confirm. Swappr is not CoinDrop and not IOU.</p>
         </div>
-        <div class="feature-container">
-          <img
-            src="../assets/swappr/4.png"
-            alt="Confirm swap amount and destination in Swappr"
-          />
-          <h4>Confirm the swap.</h4>
+      </section>
+      <section class="final">
+        <div class="wrap">
+          <h2>Learn more on swappr.website</h2>
+          <p class="sub" style="margin-left:auto;margin-right:auto">Screenshots, features, safety notes, FAQ and articles about swapping crypto.</p>
+          <div class="cta"><a class="btn btn-primary" href="https://swappr.website/">Go to swappr.website <svg class="icon" viewBox="0 0 448 512" aria-hidden="true" focusable="false"><path d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"/></svg></a></div>
         </div>
+      </section>
+    </main>
+    <footer class="site">
+      <div class="wrap">
+        <span>&copy; GSPTeck &middot; <a href="https://coinx.gspteck.com/">CoinX</a> projects by <a href="https://gspteck.com">gspteck</a></span>
+        <nav aria-label="Footer">
+          <a href="https://gspteck.com/policy">Privacy policy</a>
+          <a href="https://gspteck.com/delete-account">Delete account</a>
+          <a href="mailto:gspteck@gmail.com">Support</a>
+        </nav>
       </div>
-      <div class="feature-wrapper">
-        <div class="feature-container">
-          <img
-            src="../assets/swappr/5.png"
-            alt="Track swap progress in Swappr"
-          />
-          <h4>Track the order.</h4>
-        </div>
-        <div class="feature-container">
-          <img
-            src="../assets/swappr/GRAPHIC.png"
-            alt="Complete crypto swaps with Swappr"
-          />
-          <h4>Get your coins.</h4>
-        </div>
-      </div>
-
-      <button onclick="openGooglePlayStore(); gtag_report_conversion()">
-        Get Swappr Now!
-      </button>
-    </div>
-
-    <div id="bottom-container">
-      <h2>Swap crypto on the go with Swappr.</h2>
-
-      <h1>Why Swappr</h1>
-      <h5>Built for speed and clarity.</h5>
-      <div id="membership-wrapper">
-        <div class="plan-container">
-          <h3>Simple flow</h3>
-          <hr />
-          <ul>
-            <li><b>Select</b> from and to coins.</li>
-            <li><b>Enter</b> amount and address.</li>
-            <li><b>Follow</b> live order status.</li>
-          </ul>
-          <button onclick="openGooglePlayStore(); gtag_report_conversion()">
-            Download
-          </button>
-        </div>
-        <div class="plan-container">
-          <h3>Mobile first</h3>
-          <hr />
-          <ul>
-            <li><b>Android</b> app on Google Play.</li>
-            <li><b>Clean</b> UI focused on swaps.</li>
-            <li><b>Part of</b> the CoinX suite.</li>
-          </ul>
-          <button onclick="openGooglePlayStore(); gtag_report_conversion()">
-            Let's Go!
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <h4 id="credits">created by <a href="https://gspteck.com">gspteck</a>.</h4>
-
-    <script src="../scripts/swapprscript.js"></script>
+    </footer>
   </body>
 </html>

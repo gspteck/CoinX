@@ -21,6 +21,13 @@ const SITES = {
     mediaPrefix: "coindrop-media",
     richAdsSiteId: "407900",
     name: "CoinDrop",
+    // Hand-written /blog copy (title, H1, meta description, intro shown above the list).
+    blog: {
+      title: "Crypto Airdrop, Faucet and Free Token Guides | CoinDrop",
+      h1: "Crypto airdrop, faucet and free token guides",
+      description: "CoinDrop guides to crypto airdrops, faucets and free tokens: how claims work, where real opportunities come from, and checklists for spotting drainer sites, fake checkers and impersonation scams.",
+      intro: "Guides to earning crypto from airdrops, faucets and free token offers without handing your wallet to a scammer. They explain how an airdrop moves from announcement to snapshot to claim, how faucets work and what they pay out, and where genuine free tokens tend to come from. Many are safety checklists for the claim step: fake eligibility checkers, wallet-draining approvals, address poisoning, impersonation in Discord and Telegram DMs, and blind signing on hardware wallets. CoinDrop is our own app for earning crypto through daily tasks.",
+    },
     // Default Firebase Hosting hosts for this site's target (serve-side mapping only).
     altHosts: ["coindropapp.web.app", "coindropapp.firebaseapp.com"],
   },
@@ -32,6 +39,13 @@ const SITES = {
     mediaPrefix: "coinx-media",
     richAdsSiteId: "407899",
     name: "CoinX",
+    // Hand-written /blog copy (title, H1, meta description, intro shown above the list).
+    blog: {
+      title: "Crypto Exchange and Wallet Safety Guides | CoinX",
+      h1: "Crypto exchange, wallet and app safety guides",
+      description: "CoinX guides for retail crypto users: exchange account security, deposits and withdrawals, self-custody wallets, verifying official apps, order books and trading basics. Educational, not financial advice.",
+      intro: "Educational guides for people who buy, hold and move crypto through exchanges and mobile apps. The newest ones focus on account safety: 2FA and SIM-swap risk, withdrawal allowlists, phishing and fake APKs, data breach notices and checking that an app on Google Play is the official one. Others explain trading basics such as order books, spreads, liquidity and centralized versus decentralized platforms. Some guides mention CoinDrop and Swappr, the apps we build, and say so when they do; nothing here is financial advice.",
+    },
     altHosts: ["coinx-c08b6.web.app", "coinx-c08b6.firebaseapp.com"],
   },
   swappr: {
@@ -43,6 +57,13 @@ const SITES = {
     // Set when a RichAds site id exists; empty skips inject (ensureRichAdsInHead guards).
     richAdsSiteId: "409485",
     name: "Swappr",
+    // Hand-written /blog copy (title, H1, meta description, intro shown above the list).
+    blog: {
+      title: "Crypto Swap Guides: Networks, Addresses, Rates and KYC | Swappr",
+      h1: "Crypto swap guides",
+      description: "Swappr guides to instant crypto swaps: picking the right network, pasting the right address type, memos and destination tags, fixed vs float rates, tracking a swap and what can pause one for KYC.",
+      intro: "Guides to swapping one cryptocurrency for another without losing funds to a wrong network, a wrong address or a missing memo. They compare instant swap apps with exchanges and DEXs, explain fixed versus floating rates, which USDT network to pick, Bitcoin address types, destination tags, refund addresses and how to track a swap by its TXID, and list the situations that can pause a swap for KYC checks. Swappr is our own swap app, powered by FixedFloat.",
+    },
     altHosts: ["swapprapp.web.app", "swapprapp.firebaseapp.com"],
   },
 };
@@ -649,7 +670,10 @@ function buildHomeHtml(index, site) {
 function buildBlogArchiveHtml(index, site) {
   const name = site.name || "Articles";
   const canonical = `${site.baseUrl}${BLOG_PATH}`;
-  const title = `All ${name} articles`;
+  const blog = site.blog || {};
+  const title = blog.title || `All ${name} articles`;
+  const h1 = blog.h1 || title;
+  const description = blog.description || `Every published ${name} article, newest first.`;
   const items = index
     .map((a) => {
       const date = formatDate(a.ms);
@@ -665,7 +689,7 @@ function buildBlogArchiveHtml(index, site) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(title)}</title>
   <link rel="canonical" href="${escapeHtml(canonical)}">
-  <meta name="description" content="${escapeHtml(`Every published ${name} article, newest first.`)}">
+  <meta name="description" content="${escapeHtml(description)}">
   <style>
     :root { color-scheme: light dark; }
     body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; max-width: 780px; margin: 40px auto; padding: 0 16px; }
@@ -673,13 +697,15 @@ function buildBlogArchiveHtml(index, site) {
     li { margin: 0.75rem 0; }
     time { color: #6b7280; font-size: 0.9em; margin-left: 0.25rem; }
     .desc { color: #6b7280; font-size: 0.95em; }
+    .intro { font-size: 1.05em; }
+    .count { color: #6b7280; }
   </style>
 </head>
 <body>
   <nav><a href="${escapeHtml(site.baseUrl)}/">${escapeHtml(name)} home</a></nav>
   <main>
-    <h1>${escapeHtml(title)}</h1>
-    <p>${index.length} articles, newest first.</p>
+    <h1>${escapeHtml(h1)}</h1>
+${blog.intro ? `    <p class="intro">${escapeHtml(blog.intro)}</p>\n` : ""}    <p class="count">${index.length} articles, newest first.</p>
     <ul>
 ${items}
     </ul>

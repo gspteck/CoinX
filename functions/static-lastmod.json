@@ -1,0 +1,46 @@
+{
+  "generatedBy": "scripts/update-static-lastmod.cjs",
+  "sources": {
+    "coinx/home": [
+      "functions/templates/coinx-home.html"
+    ],
+    "coindrop/home": [
+      "functions/templates/coindrop-home.html"
+    ],
+    "swappr/home": [
+      "functions/templates/swappr-home.html"
+    ],
+    "coinx/blog": [
+      {
+        "L": ":buildBlogArchiveHtml:functions/index.js"
+      },
+      {
+        "L": "/^const SITES = {/,/^};/:functions/index.js"
+      }
+    ],
+    "coindrop/blog": [
+      {
+        "L": ":buildBlogArchiveHtml:functions/index.js"
+      },
+      {
+        "L": "/^const SITES = {/,/^};/:functions/index.js"
+      }
+    ],
+    "swappr/blog": [
+      {
+        "L": ":buildBlogArchiveHtml:functions/index.js"
+      },
+      {
+        "L": "/^const SITES = {/,/^};/:functions/index.js"
+      }
+    ]
+  },
+  "pages": {
+    "coinx/home": "2026-10-18",
+    "coindrop/home": "2026-10-18",
+    "swappr/home": "2026-10-18",
+    "coinx/blog": "2026-10-18",
+    "coindrop/blog": "2026-10-18",
+    "swappr/blog": "2026-10-18"
+  }
+}

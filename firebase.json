@@ -318,6 +318,9 @@
         "firebase-debug.log",
         "firebase-debug.*.log",
         "*.local"
+      ],
+      "predeploy": [
+        "node \"$PROJECT_DIR/scripts/update-static-lastmod.cjs\""
       ]
     }
   ]

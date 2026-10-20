@@ -1,0 +1,171 @@
+{
+  "rules": {
+    "coindrop": {
+      // App config values (read-only for signed-in users; admin-managed).
+      "minRequiredVersion": { ".read": "auth != null", ".write": "false" },
+      "minRequiredBuildNumber": { ".read": "auth != null", ".write": "false" },
+      "liquidityPercentage": { ".read": "auth != null", ".write": "false" },
+      "appEarnings": { ".read": "auth != null", ".write": "false" },
+      "anonAuth": {
+        ".read": "auth != null",
+        ".write": "false"
+      },
+      "drops": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".validate": "newData.isNumber() && newData.val() != 0"
+      },
+      "referrals": {
+        "$refCode": {
+          ".read": "auth != null",
+          "toCredit": {
+            ".write": "auth != null",
+            ".validate": "newData.isNumber()"
+          }
+        }
+      },
+      "secondaryTokens": {
+        "$tokenName": {
+          ".read": "auth != null",
+          ".write": "auth != null",
+          "supply": {
+            ".validate": "newData.isNumber() && (!data.exists() || (newData.val() < data.val() && (data.val() - newData.val()) < 10) )"
+          }
+        }
+      },
+      "withdrawalRequests": {
+        "$requestId": {
+          ".read": "auth != null",
+          ".write": "auth != null && newData.child('uid').val() === auth.uid",
+          ".validate": "newData.hasChildren(['uid', 'amount', 'address', 'requestedAt']) && newData.child('uid').val() === auth.uid"
+        }
+      },
+      "withdrawl_transactions": {
+        ".read": "auth != null",
+        ".write": "false"
+      }
+    },
+
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid",
+
+        "coindrop": {
+          "lastLogin": {
+            ".validate": "newData.isNumber()"
+          },
+          "lastCheckin": {
+            ".validate": "newData.isNumber()"
+          },
+          "drops": {
+            ".validate": "newData.isNumber()"
+          },
+          // Daily reward (check-in) claim flag.
+          // Ensures 1 user can claim the daily reward only once per UTC date.
+          // The client writes under dailyClaims/YYYY-MM-DD = true using a transaction.
+          // Rule + transaction together prevent duplicates even under concurrent calls / API abuse.
+          "dailyClaims": {
+            "$date": {
+              // Only ever allow boolean true. If the node already exists as true, re-writing true is allowed (idempotent).
+              // Any other value or attempt to unset is rejected.
+              ".validate": "newData.isBoolean() && newData.val() === true && (!data.exists() || data.val() === true)",
+              // Explicitly allow the owner to read their own claim flags (top-level .read already permits, kept for clarity).
+              ".read": "$uid === auth.uid"
+            }
+          },
+          "secondaryTokens": {
+            "$tokenName": {
+              ".validate": "newData.isNumber() && (!data.exists() || (newData.val() > data.val() && (newData.val() - data.val()) < 10) )"
+            }
+          },
+          "walletAddress": {
+            ".validate": "newData.isString() && newData.val().length > 20"
+          },
+          // One-time sponsored tasks (store rating, etc.).
+          // Once set to true, they stay true. Client can only write true if it was not already true.
+          "sponsoredTasks": {
+            "$taskId": {
+              ".validate": "newData.isBoolean() && newData.val() === true && (!data.exists() || data.val() === true)"
+            }
+          }
+        },
+
+        "cointrade": {
+          "ctBalance": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "totalTrades": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "winningTrades": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "profitLoss": {
+            ".validate": "newData.isNumber()"
+          },
+          "trades": {
+            "$tradeId": {
+              // Creation: full trade record required. Updates (resolution) allowed on existing records.
+              ".validate": "(!data.exists() && newData.hasChildren(['asset', 'direction', 'amount', 'entryPrice', 'targetTime', 'resolved', 'timestamp'])) || data.exists()",
+
+              "asset": {
+                ".validate": "newData.isString() && newData.val().length > 0"
+              },
+              "direction": {
+                ".validate": "newData.isString() && (newData.val() === 'up' || newData.val() === 'down')"
+              },
+              "amount": {
+                ".validate": "newData.isNumber() && newData.val() > 0"
+              },
+              "entryPrice": {
+                ".validate": "newData.isNumber()"
+              },
+              "targetTime": {
+                ".validate": "newData.isNumber()"
+              },
+              "resolved": {
+                ".validate": "newData.isBoolean()"
+              },
+              "result": {
+                ".validate": "newData.val() === 'win' || newData.val() === 'loss' || !newData.exists()"
+              },
+              "payout": {
+                ".validate": "newData.isNumber()"
+              },
+              "exitPrice": {
+                ".validate": "newData.isNumber() || !newData.exists()"
+              },
+              "timestamp": {
+                ".validate": "newData.isNumber()"
+              }
+            }
+          }
+        },
+
+        "swappr": {
+          "device": {
+            ".validate": "newData.hasChildren(['lastSeen'])"
+          },
+          "transactions": {
+            "$transactionId": {
+              ".validate": "newData.hasChildren(['fromCcy', 'toCcy']) || newData.hasChildren(['response'])"
+            }
+          },
+          "activities": {
+            "$activityId": {
+              ".validate": "newData.hasChild('type') && newData.hasChild('timestamp')"
+            }
+          }
+        }
+      }
+    },
+
+    "swappr": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
+
+

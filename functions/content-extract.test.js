@@ -58,3 +58,11 @@ test("stripLanguageSwitcher is a no-op without a switcher", () => {
   assert.strictEqual(stripLanguageSwitcher(html), html);
   assert.strictEqual(stripLanguageSwitcher(""), "");
 });
+
+test("seo_title overrides <title> only and falls back to the H1 title", () => {
+  const { extractMonolingualPost: x } = require("./content-extract");
+  assert.strictEqual(x({ title: "Long H1 title", seo_title: "  Short  | Brand " }).seo_title, "Short | Brand");
+  assert.strictEqual(x({ title: "Long H1 title", seo_title: "Short | Brand" }).title, "Long H1 title");
+  assert.strictEqual(x({ title: "Long H1 title" }).seo_title, "Long H1 title");
+  assert.strictEqual(x({ title: "Long H1 title", seo_title: "" }).seo_title, "Long H1 title");
+});

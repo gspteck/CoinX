@@ -287,6 +287,10 @@ function ensureRichAdsInHead(html, siteId) {
 function buildPublishedHtml(post, relatedArticles, site) {
   const s = site || DEFAULT_SITE;
   const title = post.title || "Published Page";
+  // <title> (and og:title) may use the shorter optional seo_title; the H1 stays post.title.
+  const seoTitle = (typeof post.seo_title === "string" && post.seo_title.replace(/\s+/g, " ").trim().length && post.seo_title.length <= 120)
+    ? post.seo_title.replace(/\s+/g, " ").trim()
+    : title;
   const description = post.meta_description || "";
   const bodyHtml = post.body_html || "";
   const jsonLd = post.json_ld ? JSON.stringify(post.json_ld) : null;
@@ -302,6 +306,9 @@ function buildPublishedHtml(post, relatedArticles, site) {
   if (looksComplete) {
     // Inject ld+json into head if we have it and a head tag exists
     let html = bodyHtml;
+    if (seoTitle !== title && /<title[^>]*>[\s\S]*?<\/title>/i.test(html)) {
+      html = html.replace(/<title[^>]*>[\s\S]*?<\/title>/i, `<title>${escapeHtml(seoTitle)}</title>`);
+    }
     if (jsonLd) {
       const script = `<script type="application/ld+json">${jsonLd}</script>`;
       if (/<head[^>]*>/i.test(html)) {
@@ -331,7 +338,7 @@ function buildPublishedHtml(post, relatedArticles, site) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(title)}</title>
+  <title>${escapeHtml(seoTitle)}</title>
   <link rel="canonical" href="${escapeHtml(canonicalHref)}">
   ${description ? `<meta name="description" content="${escapeHtml(description)}">` : ""}
   ${ldScript}
@@ -376,11 +383,12 @@ function isValidHtml(str) {
   return /<!doctype|<html|<head|<body/i.test(t);
 }
 
-async function savePublishedPage(slug, html, collection) {
+async function savePublishedPage(slug, html, collection, h1Title) {
   const now = admin.firestore.FieldValue.serverTimestamp();
   await db.collection(collection || DEFAULT_SITE.collection).doc(slug).set({
     slug,
     html,
+    ...(typeof h1Title === "string" && h1Title.trim() ? { title: h1Title.trim() } : {}),
     publishedAt: now,
     updatedAt: now,
   }, { merge: true });
@@ -625,7 +633,8 @@ async function getArticleIndex(site) {
     if (!data.html) continue;
     items.push({
       slug,
-      title: extractTitleFromHtml(data.html, slug),
+      // Listings show the H1 (stored as data.title); <title> may be a shorter seo_title.
+      title: (typeof data.title === "string" && data.title.trim()) ? data.title.trim() : extractTitleFromHtml(data.html, slug),
       description: extractDescriptionFromHtml(data.html),
       ms: tsToMillis(data.publishedAt) || tsToMillis(data.updatedAt),
       url: `${s.baseUrl}/${slug}`,
@@ -693,10 +702,22 @@ function buildLatestArticleItems(index) {
     .join("\n");
 }
 
+/**
+ * Time-limited homepage blocks: <!--UNTIL:YYYY-MM-DD--> ... <!--/UNTIL-->
+ * are shown up to and excluding that date (UTC), then dropped automatically.
+ */
+function stripExpiredBlocks(html, now = new Date()) {
+  const today = now.toISOString().split("T")[0];
+  return String(html).replace(
+    /<!--UNTIL:(\d{4}-\d{2}-\d{2})-->([\s\S]*?)<!--\/UNTIL-->\n?/g,
+    (_m, until, inner) => (today < until ? inner : "")
+  );
+}
+
 function buildHomeHtml(index, site) {
   const tpl = getHomeTemplate(site);
   if (!tpl) return null;
-  return tpl
+  return stripExpiredBlocks(tpl)
     .replace("<!--LATEST_ARTICLES_ITEMS-->", buildLatestArticleItems(index))
     .replace(/<!--ARTICLE_COUNT-->/g, String(index.length));
 }
@@ -977,7 +998,7 @@ contentengineApp.all(/.*/, async (req, res) => {
 
       // related_articles: internal links contentengine expects on the live page for crawl paths
       const fullHtml = buildPublishedHtml(post, payload.related_articles, activeSite);
-      await savePublishedPage(slug, fullHtml, activeSite.collection);
+      await savePublishedPage(slug, fullHtml, activeSite.collection, post.title);
 
       // Sitemap is generated on the fly from Firestore by publishedSitemapXml.
       // robots.txt is static per Hosting target (Allow:/ + host Sitemap).

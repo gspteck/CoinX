@@ -8,6 +8,14 @@
  * reused across the AutoX / gspteck / CoinX (dual-site) function bases.
  */
 
+/** Trim/collapse an optional seo_title; returns "" when absent or unusable. */
+function cleanSeoTitle(raw) {
+  if (typeof raw !== "string") return "";
+  const t = raw.replace(/\s+/g, " ").trim();
+  if (!t || t.length > 120) return "";
+  return t;
+}
+
 /**
  * @param {object} post The raw `payload.post` object from an incoming webhook.
  * @returns {{title:string, meta_description:string, body_html:string, json_ld:*, language:string}}
@@ -15,6 +23,8 @@
 function extractMonolingualPost(post = {}) {
   return {
     title: post.title || "Published Page",
+    // Optional short <title> (e.g. "Keyword | Brand"); falls back to the H1 title.
+    seo_title: cleanSeoTitle(post.seo_title) || post.title || "Published Page",
     meta_description: post.meta_description || "",
     body_html: post.body_html || "",
     json_ld: post.json_ld || null,
@@ -33,6 +43,7 @@ function stripLanguageSwitcher(html) {
 }
 
 module.exports = {
+  cleanSeoTitle,
   extractMonolingualPost,
   stripLanguageSwitcher,
 };

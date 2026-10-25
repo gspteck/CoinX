@@ -45,6 +45,7 @@ const SITES = {
       h1: "Crypto exchange, wallet and app safety guides",
       description: "CoinX guides for retail crypto users: exchange account security, deposits and withdrawals, self-custody wallets, verifying official apps, order books and trading basics. Educational, not financial advice.",
       intro: "Educational guides for people who buy, hold and move crypto through exchanges and mobile apps. The newest ones focus on account safety: 2FA and SIM-swap risk, withdrawal allowlists, phishing and fake APKs, data breach notices and checking that an app on Google Play is the official one. Others explain trading basics such as order books, spreads, liquidity and centralized versus decentralized platforms. Some guides mention CoinDrop and Swappr, the apps we build, and say so when they do; nothing here is financial advice.",
+      introLinks: [{ phrase: "trading basics", url: "https://coinx.gspteck.com/crypto-market-basics" }],
     },
     altHosts: ["coinx-c08b6.web.app", "coinx-c08b6.firebaseapp.com"],
   },
@@ -498,6 +499,14 @@ async function getPublishedSitemapEntries(site) {
       changefreq: "daily",
     },
   ];
+  for (const [hubSlug, hub] of Object.entries(HUB_PAGES[s.key] || {})) {
+    entries.push({
+      loc: `${s.baseUrl}/${hubSlug}`,
+      lastmod: STATIC_LASTMOD[`${s.key}/${hub.lastmodKey}`] || null,
+      priority: hub.priority || "0.8",
+      changefreq: "monthly",
+    });
+  }
   for (const p of pages) {
     entries.push({
       loc: `${s.baseUrl}/${p.slug}`,
@@ -536,6 +545,12 @@ const fs = require("fs");
 const path = require("path");
 
 const BLOG_PATH = "/blog";
+// Hand-written hub pages served from functions/templates (listed in the sitemap; lastmod key "<site>/<lastmodKey>").
+const HUB_PAGES = {
+  coinx: {
+    "crypto-market-basics": { file: "coinx-market-basics.html", lastmodKey: "market-basics", priority: "0.8" },
+  },
+};
 const HOME_LATEST_COUNT = 5;
 const RELATED_COUNT = 5;
 const INDEX_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -722,6 +737,18 @@ function buildHomeHtml(index, site) {
     .replace(/<!--ARTICLE_COUNT-->/g, String(index.length));
 }
 
+/** Turn the first occurrence of each hand-picked phrase in the (already escaped) /blog intro into a link. */
+function linkIntroPhrases(escapedIntro, links) {
+  let out = escapedIntro;
+  for (const l of links || []) {
+    const phrase = escapeHtml(l.phrase || "");
+    const i = phrase ? out.indexOf(phrase) : -1;
+    if (i === -1) continue;
+    out = `${out.slice(0, i)}<a href="${escapeHtml(l.url)}">${phrase}</a>${out.slice(i + phrase.length)}`;
+  }
+  return out;
+}
+
 function buildBlogArchiveHtml(index, site) {
   const name = site.name || "Articles";
   const canonical = `${site.baseUrl}${BLOG_PATH}`;
@@ -760,7 +787,7 @@ function buildBlogArchiveHtml(index, site) {
   <nav><a href="${escapeHtml(site.baseUrl)}/">${escapeHtml(name)} home</a></nav>
   <main>
     <h1>${escapeHtml(h1)}</h1>
-${blog.intro ? `    <p class="intro">${escapeHtml(blog.intro)}</p>\n` : ""}    <p class="count">${index.length} articles, newest first.</p>
+${blog.intro ? `    <p class="intro">${linkIntroPhrases(escapeHtml(blog.intro), blog.introLinks)}</p>\n` : ""}    <p class="count">${index.length} articles, newest first.</p>
     <ul>
 ${items}
     </ul>
@@ -1090,6 +1117,29 @@ exports.servePublishedPage = onRequest(
     const isBlog = /^\/blog\/?$/i.test(p) || /^\/blog\.html$/i.test(p);
     if (isIndexHtml) {
       redirectToPublishedCanonical(res, "/", site);
+      return;
+    }
+    // Hand-written topic hubs (static template, no RichAds). Only on the sites listed in HUB_PAGES.
+    const hubMatch = /^\/([a-z0-9-]+?)(\.html|\/)?$/i.exec(p);
+    const hub = hubMatch && HUB_PAGES[site.key] && HUB_PAGES[site.key][hubMatch[1].toLowerCase()];
+    if (hub) {
+      const hubPath = `/${hubMatch[1].toLowerCase()}`;
+      if ((host && !isCanonicalPublishedHost(host, site)) || p !== hubPath) {
+        redirectToPublishedCanonical(res, hubPath, site);
+        return;
+      }
+      let hubHtml;
+      try {
+        hubHtml = fs.readFileSync(path.join(__dirname, "templates", hub.file), "utf8");
+      } catch (err) {
+        console.error("[servePublishedPage] hub template missing", hub.file, err);
+        res.status(404).send("Not found");
+        return;
+      }
+      res.set("Content-Type", "text/html; charset=utf-8");
+      res.set("Cache-Control", "public, max-age=300");
+      res.set("Link", `<${publishedCanonicalUrl(hubPath, site)}>; rel="canonical"`);
+      res.status(200).send(hubHtml);
       return;
     }
     if (isHome || isBlog) {

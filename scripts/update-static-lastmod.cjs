@@ -19,6 +19,7 @@ const SOURCES = {
   "coinx/home": [
     "functions/templates/coinx-home.html"
   ],
+  "coinx/market-basics": ["functions/templates/coinx-market-basics.html"],
   "coindrop/home": [
     "functions/templates/coindrop-home.html"
   ],

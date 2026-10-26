@@ -139,11 +139,7 @@ In your html page, add the snippet and call gtag_report_conversion when someone 
               "ratingValue": "4.6",
               "ratingCount": "1200"
             },
-            "publisher": {
-              "@type": "Organization",
-              "name": "CoinX",
-              "url": "https://coinx.gspteck.com/"
-            }
+            "publisher": { "@id": "https://coindrop.website/#organization" }
           },
           {
             "@type": "FAQPage",
@@ -162,12 +158,21 @@ In your html page, add the snippet and call gtag_report_conversion when someone 
             ]
           },
           {
+            "@type": "WebSite",
+            "@id": "https://coindrop.website/#website",
+            "name": "CoinDrop",
+            "url": "https://coindrop.website/",
+            "inLanguage": "en",
+            "publisher": { "@id": "https://coindrop.website/#organization" }
+          },
+          {
             "@type": "Organization",
             "@id": "https://coindrop.website/#organization",
-            "name": "CoinX",
-            "url": "https://coinx.gspteck.com/",
+            "name": "CoinDrop",
+            "url": "https://coindrop.website/",
             "logo": "https://coindrop.website/assets/coindrop/coindrop_logo.png",
-            "sameAs": ["https://x.com/coindropapp"]
+            "sameAs": ["https://x.com/coindropapp"],
+            "parentOrganization": { "@type": "Organization", "name": "CoinX", "url": "https://coinx.gspteck.com/" }
           }
         ]
       }

@@ -20,6 +20,9 @@ const SOURCES = {
     "functions/templates/coinx-home.html"
   ],
   "coinx/market-basics": ["functions/templates/coinx-market-basics.html"],
+  "coinx/author": ["public/author/coinx-editorial.html"],
+  "coindrop/author": ["coindrop-public/author/coindrop-editorial.html"],
+  "swappr/author": ["swappr-public/author/swappr-editorial.html"],
   "coindrop/home": [
     "functions/templates/coindrop-home.html"
   ],

@@ -3,6 +3,7 @@ const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 const express = require("express");
+const seo = require("./seo-extras");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -70,6 +71,14 @@ const SITES = {
   },
 };
 const DEFAULT_SITE = SITES.coindrop;
+
+// Editorial-team author pages (static Hosting files under public/author/, coindrop-public/author/,
+// swappr-public/author/). Post bylines link here; BlogPosting author uses the byline text.
+const AUTHOR_PAGES = {
+  coinx: "/author/coinx-editorial",
+  coindrop: "/author/coindrop-editorial",
+  swappr: "/author/swappr-editorial",
+};
 
 // The root path for the "landing" of published content on the dedicated site.
 const PUBLISHED_LANDING = "/";
@@ -387,11 +396,15 @@ function isValidHtml(str) {
 
 async function savePublishedPage(slug, html, collection, h1Title) {
   const now = admin.firestore.FieldValue.serverTimestamp();
-  await db.collection(collection || DEFAULT_SITE.collection).doc(slug).set({
+  const ref = db.collection(collection || DEFAULT_SITE.collection).doc(slug);
+  const existing = await ref.get();
+  // publishedAt is set on first save only; updates refresh updatedAt alone.
+  const firstSave = !existing.exists || !existing.get("publishedAt");
+  await ref.set({
     slug,
     html,
     ...(typeof h1Title === "string" && h1Title.trim() ? { title: h1Title.trim() } : {}),
-    publishedAt: now,
+    ...(firstSave ? { publishedAt: now } : {}),
     updatedAt: now,
   }, { merge: true });
 }
@@ -479,8 +492,9 @@ async function getPublishedSitemapEntries(site) {
   try {
     pages = await listPublishedPagesForSitemap(s.collection);
   } catch (e) {
+    // Fail loudly: publishedSitemapXml answers 503 instead of a sitemap without posts.
     console.error("[sitemap] failed to list published pages", e);
-    pages = [];
+    throw e;
   }
   // Stable order helps diffs / Search Console
   pages.sort((a, b) => a.slug.localeCompare(b.slug));
@@ -500,6 +514,14 @@ async function getPublishedSitemapEntries(site) {
       changefreq: "daily",
     },
   ];
+  if (AUTHOR_PAGES[s.key]) {
+    entries.push({
+      loc: `${s.baseUrl}${AUTHOR_PAGES[s.key]}`,
+      lastmod: STATIC_LASTMOD[`${s.key}/author`] || null,
+      priority: "0.5",
+      changefreq: "monthly",
+    });
+  }
   for (const [hubSlug, hub] of Object.entries(HUB_PAGES[s.key] || {})) {
     entries.push({
       loc: `${s.baseUrl}/${hubSlug}`,
@@ -526,7 +548,7 @@ function buildSitemapXml(entries) {
   ];
   for (const u of entries) {
     xml.push("  <url>");
-    xml.push(`    <loc>${u.loc}</loc>`);
+    xml.push(`    <loc>${seo.xmlEscape(u.loc)}</loc>`);
     if (u.lastmod) xml.push(`    <lastmod>${u.lastmod}</lastmod>`);
     xml.push(`    <changefreq>${u.changefreq}</changefreq>`);
     xml.push(`    <priority>${u.priority}</priority>`);
@@ -720,10 +742,10 @@ function buildLatestArticleItems(index) {
 
 /**
  * Time-limited homepage blocks: <!--UNTIL:YYYY-MM-DD--> ... <!--/UNTIL-->
- * are shown up to and excluding that date (UTC), then dropped automatically.
+ * are shown up to and excluding that date (Europe/Rome), then dropped automatically.
  */
 function stripExpiredBlocks(html, now = new Date()) {
-  const today = now.toISOString().split("T")[0];
+  const today = seo.romeToday(now);
   return String(html).replace(
     /<!--UNTIL:(\d{4}-\d{2}-\d{2})-->([\s\S]*?)<!--\/UNTIL-->\n?/g,
     (_m, until, inner) => (today < until ? inner : "")
@@ -1104,7 +1126,7 @@ exports.servePublishedPage = onRequest(
     maxInstances: 30,
     secrets: [contentengineSecret],
   },
-  withAgentAnalytics(async (req, res) => {
+  seo.withProbeGuard(withAgentAnalytics(async (req, res) => {
     let slug = null;
     let requestedHtmlExt = false;
 
@@ -1134,7 +1156,7 @@ exports.servePublishedPage = onRequest(
         hubHtml = fs.readFileSync(path.join(__dirname, "templates", hub.file), "utf8");
       } catch (err) {
         console.error("[servePublishedPage] hub template missing", hub.file, err);
-        res.status(404).send("Not found");
+        seo.sendCachedNotFound(res, "Not found");
         return;
       }
       res.set("Content-Type", "text/html; charset=utf-8");
@@ -1161,7 +1183,7 @@ exports.servePublishedPage = onRequest(
       }
       const html = isHome ? buildHomeHtml(index, site) : buildBlogArchiveHtml(index, site);
       if (!html) {
-        res.status(404).send("Not found");
+        seo.sendCachedNotFound(res, "Not found");
         return;
       }
       const canonicalHref = publishedCanonicalUrl(targetPath, site);
@@ -1188,7 +1210,7 @@ exports.servePublishedPage = onRequest(
         redirectToPublishedCanonical(res, "/", site);
         return;
       }
-      res.status(404).send("Not found");
+      seo.sendCachedNotFound(res, "Not found");
       return;
     }
 
@@ -1209,7 +1231,7 @@ exports.servePublishedPage = onRequest(
     try {
       const page = await getPublishedPage(slug, site.collection);
       if (!page || !page.html) {
-        res.status(404).send("Page not found");
+        seo.sendCachedNotFound(res, "Page not found");
         return;
       }
 
@@ -1221,10 +1243,14 @@ exports.servePublishedPage = onRequest(
       } catch (linkErr) {
         console.error("[servePublishedPage] related links failed", linkErr);
       }
-      const html = ensureRichAdsInHead(
-        ensureCanonicalLink(pageHtml, canonicalHref),
-        site.richAdsSiteId
-      );
+      const enhanced = seo.enhancePostHtml(ensureCanonicalLink(pageHtml, canonicalHref), {
+        canonical: canonicalHref,
+        publishedAt: page.publishedAt,
+        updatedAt: page.updatedAt,
+        author: { type: "Organization", url: `${site.baseUrl}${AUTHOR_PAGES[site.key]}` },
+        publisher: seo.GSPTECK_PUBLISHER,
+      });
+      const html = ensureRichAdsInHead(enhanced, site.richAdsSiteId);
 
       res.set("Content-Type", "text/html; charset=utf-8");
       res.set("Cache-Control", "public, max-age=300");
@@ -1234,7 +1260,7 @@ exports.servePublishedPage = onRequest(
       console.error("[servePublishedPage] error", err);
       res.status(500).send("Error loading page");
     }
-  }, AGENT_ANALYTICS)
+  }, AGENT_ANALYTICS))
 );
 
 // === 3. Published site robots.txt (kept for direct/debug calls only) ===
@@ -1282,17 +1308,27 @@ exports.publishedSitemapXml = onRequest(
   },
   withAgentAnalytics(async (req, res) => {
     const host = getRequestHost(req);
-    const site = getSiteForRequest(req);
+    // Serve-side resolution so *.web.app / *.firebaseapp.com alt hosts map to their own site.
+    const site = getServeSiteForRequest(req);
     if (host && !isCanonicalPublishedHost(host, site)) {
       redirectToPublishedCanonical(res, "/sitemap.xml", site);
+      return;
+    }
+
+    let entries;
+    try {
+      entries = await getPublishedSitemapEntries(site);
+    } catch (err) {
+      // Firestore read failed: never serve a sitemap that silently drops every post.
+      res.set("Cache-Control", "no-store");
+      res.set("Retry-After", "300");
+      res.status(503).type("text/plain").send("Sitemap temporarily unavailable");
       return;
     }
 
     res.set("Content-Type", "application/xml; charset=utf-8");
     // Avoid sticky CDN/browser cache of old <loc> hosts after domain changes
     res.set("Cache-Control", "public, max-age=0, must-revalidate");
-
-    const entries = await getPublishedSitemapEntries(site);
     res.status(200).send(buildSitemapXml(entries));
   }, AGENT_ANALYTICS)
 );

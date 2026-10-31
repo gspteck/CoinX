@@ -34,7 +34,7 @@ const SOURCES = {
       "L": ":buildBlogArchiveHtml:functions/index.js"
     },
     {
-      "L": "/^const SITES = {/,/^};/:functions/index.js"
+      "L": "/^  coinx: {/,/^  },/:functions/index.js"
     }
   ],
   "coindrop/blog": [
@@ -42,7 +42,7 @@ const SOURCES = {
       "L": ":buildBlogArchiveHtml:functions/index.js"
     },
     {
-      "L": "/^const SITES = {/,/^};/:functions/index.js"
+      "L": "/^  coindrop: {/,/^  },/:functions/index.js"
     }
   ],
   "swappr/blog": [
@@ -50,7 +50,7 @@ const SOURCES = {
       "L": ":buildBlogArchiveHtml:functions/index.js"
     },
     {
-      "L": "/^const SITES = {/,/^};/:functions/index.js"
+      "L": "/^  swappr: {/,/^  },/:functions/index.js"
     }
   ]
 };

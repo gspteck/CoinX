@@ -27,7 +27,7 @@
         "L": ":buildBlogArchiveHtml:functions/index.js"
       },
       {
-        "L": "/^const SITES = {/,/^};/:functions/index.js"
+        "L": "/^  coinx: {/,/^  },/:functions/index.js"
       }
     ],
     "coindrop/blog": [
@@ -35,7 +35,7 @@
         "L": ":buildBlogArchiveHtml:functions/index.js"
       },
       {
-        "L": "/^const SITES = {/,/^};/:functions/index.js"
+        "L": "/^  coindrop: {/,/^  },/:functions/index.js"
       }
     ],
     "swappr/blog": [
@@ -43,7 +43,7 @@
         "L": ":buildBlogArchiveHtml:functions/index.js"
       },
       {
-        "L": "/^const SITES = {/,/^};/:functions/index.js"
+        "L": "/^  swappr: {/,/^  },/:functions/index.js"
       }
     ]
   },
@@ -55,8 +55,8 @@
     "swappr/author": "2026-10-31",
     "coindrop/home": "2026-10-31",
     "swappr/home": "2026-10-31",
-    "coinx/blog": "2026-10-26",
-    "coindrop/blog": "2026-10-26",
-    "swappr/blog": "2026-10-26"
+    "coinx/blog": "2026-10-25",
+    "coindrop/blog": "2026-10-31",
+    "swappr/blog": "2026-10-18"
   }
 }

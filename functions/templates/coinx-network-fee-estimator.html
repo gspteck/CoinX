@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preload" href="/fonts/ibm-plex-mono-latin-400-normal.08949f72.woff2" as="font" type="font/woff2" crossorigin />
+    <style>@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/ibm-plex-mono-latin-400-normal.08949f72.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/ibm-plex-mono-latin-700-normal.4f84d86c.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+.icon{display:inline-block;width:1em;height:1em;fill:currentColor;vertical-align:-0.125em;overflow:visible}</style>
+<title>Network Fee Estimator: Ethereum Gas and Bitcoin sat/vB | CoinX</title>
+    <meta name="description" content="Free crypto network fee estimator: enter gas used and gwei for Ethereum, or size and sat/vB for Bitcoin, and see the fee in ETH or BTC and in your currency. Runs in your browser." />
+    <meta name="robots" content="noindex, follow" />
+    <link rel="canonical" href="https://coinx.gspteck.com/tools/network-fee-estimator" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="CoinX" />
+    <meta property="og:title" content="Network Fee Estimator: Ethereum Gas and Bitcoin sat/vB | CoinX" />
+    <meta property="og:description" content="Free crypto network fee estimator: enter gas used and gwei for Ethereum, or size and sat/vB for Bitcoin, and see the fee in ETH or BTC and in your currency. Runs in your browser." />
+    <meta property="og:url" content="https://coinx.gspteck.com/tools/network-fee-estimator" />
+    <meta property="og:image" content="https://coinx.gspteck.com/assets/coindrop/coindrop_logo.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Network Fee Estimator: Ethereum Gas and Bitcoin sat/vB | CoinX" />
+    <meta name="twitter:description" content="Free crypto network fee estimator: enter gas used and gwei for Ethereum, or size and sat/vB for Bitcoin, and see the fee in ETH or BTC and in your currency. Runs in your browser." />
+    <link rel="icon" type="image/png" href="/assets/opt/coindrop_logo-192.a944b448.png" />
+    <style>:root{--ibmfont:"IBM Plex Mono",monospace;--textColor:#0A100D;--backgroundColor:#FFF9FB;--detailColor:#F1AB86;--membershipColor:#E2C004;--cardBorder:#0A100D;--muted:#555}body{margin:0;padding:0;background-color:var(--backgroundColor);color:var(--textColor);font-family:var(--ibmfont);font-weight:400;line-height:1.5}a{color:var(--textColor);text-decoration:none}a:hover{text-decoration:underline}#nav-wrapper{margin-top:20px;padding:0 100px 0 100px;display:flex;flex-direction:row;align-items:center;justify-content:space-between}#nav-wrapper h2{margin:0;font-size:28px;font-weight:700}#nav-wrapper .nav-links{display:flex;gap:24px;align-items:center}#nav-wrapper .nav-links a{font-size:15px}#hero{text-align:center;padding:60px 20px 40px;max-width:820px;margin:0 auto}#hero h1{font-size:42px;margin:0 0 16px;line-height:1.15}#hero p{font-size:18px;margin:0;color:var(--muted)}.section{padding:30px 20px 80px;max-width:1200px;margin:0 auto}.section-title{font-size:24px;margin:0 0 32px;text-align:center}.projects-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:40px}.project-card{background:#fff;border:3px solid var(--cardBorder);border-radius:20px;overflow:hidden;display:flex;flex-direction:column}.project-media{background:#f8f4f0;padding:24px;display:flex;flex-direction:column;align-items:center;gap:16px}.project-logo{height:86px;width:auto;margin-bottom:8px;border-radius:16px;border:2px solid var(--textColor);box-shadow:0 2px 8px rgba(0,0,0,0.06)}.project-screenshots{display:flex;gap:16px;justify-content:center}.project-screenshots img{height:220px;width:auto;border-radius:10px;border:2px solid var(--textColor);box-shadow:0 4px 12px rgba(0,0,0,0.08)}.project-content{padding:28px 28px 32px;display:flex;flex-direction:column;flex:1}.project-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.project-header h3{margin:0;font-size:26px}.status{font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px;border:2px solid var(--textColor);text-transform:uppercase;letter-spacing:0.5px}.status.live{background:var(--detailColor);color:var(--textColor)}.status.soon{background:transparent;color:var(--muted);border-color:#999}.project-desc{margin:0 0 20px;font-size:15px;color:#222}.project-features{display:flex;gap:14px;margin-bottom:26px;flex-wrap:wrap}.project-features .feature{display:flex;align-items:center;gap:8px;font-size:13px}.project-features .feature img{width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid #ddd}.project-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:auto}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:var(--textColor);border:3px solid var(--textColor);padding:12px 22px;font-size:15px;font-family:var(--ibmfont);font-weight:700;border-radius:999px;cursor:pointer;text-decoration:none;transition:all 0.1s ease}.btn:hover{text-decoration:none;background:#f9f5f1}.btn.primary{background:var(--detailColor);border-color:var(--textColor)}.btn.primary:hover{background:#f39e6f}footer{text-align:center;padding:40px 20px;font-size:14px;color:var(--muted)}footer a{color:var(--textColor)}@media (max-width:640px){#nav-wrapper{padding:0 20px;flex-direction:column;gap:8px}#hero h1{font-size:28px}#hero p{font-size:16px}.projects-grid{grid-template-columns:1fr;gap:28px}.project-screenshots img{height:170px}.project-header h3{font-size:22px}.project-content{padding:22px}.project-features{gap:10px}}.guides-list{list-style:none;padding:0;margin:0 auto;max-width:720px;display:grid;gap:10px}.guides-list a{display:block;padding:12px 16px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:inherit;text-decoration:none}.guides-list a:hover{border-color:rgba(255,255,255,0.28)}</style>
+    <style>.current{background:var(--detailColor);border:2px solid var(--textColor);border-radius:999px;padding:2px 12px;font-weight:700}.crumbs{max-width:1080px;margin:28px auto 0;padding:0 20px;font-size:13px;color:var(--muted)}#hero{padding:24px 20px 28px;max-width:900px}#hero h1{font-size:40px}#hero p.lead{font-size:16px;color:#222;text-align:left;margin-top:14px}#hero a,.faq a,.callout a:not(.btn),.hub-card a{text-decoration:underline;text-decoration-color:var(--detailColor);text-underline-offset:3px}.hub-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:28px;max-width:1080px;margin:0 auto;padding:0 20px}.hub-card{background:#fff;border:3px solid var(--cardBorder);border-radius:20px;padding:22px 26px}.hub-card h2{margin:0 0 8px;font-size:19px}.hub-card .group-intro{font-size:13px;color:#333;margin:0 0 8px}.hub-card ul{margin:0;padding-left:18px}.hub-card li{margin:8px 0;font-size:14px}.hub-card .blurb{display:block;font-size:12px;color:var(--muted)}.hub-card.note{background:#f8f4f0;border-style:dashed}.hub-card.note p{font-size:13px;margin:6px 0}.faq{max-width:1040px;margin:40px auto 0;padding:0 40px}.faq h2{font-size:24px;text-align:center;margin:0 0 16px}.faq h3{font-size:16px;margin:18px 0 4px}.faq p{font-size:14px;margin:0;color:#222}.callout{max-width:1080px;margin:40px auto 0;padding:0 20px}.callout .box{border:3px solid var(--textColor);border-radius:20px;padding:20px 26px;background:#fff;display:flex;justify-content:space-between;align-items:center;gap:20px}.callout .box p{margin:0;font-size:14px}@media (max-width:760px){.hub-grid{grid-template-columns:1fr}#hero h1{font-size:28px}.faq{padding:0 20px}.callout .box{flex-direction:column;align-items:flex-start}}</style>
+    <script>
+      // Analytics/ads tags load after first interaction or 3.5s after load (keeps them off the critical path).
+      window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+      gtag("js",new Date());gtag("config","AW-16967838342");
+      (function(){var d=false;function go(){if(d)return;d=true;var s=document.createElement("script");s.async=true;s.src="https://www.googletagmanager.com/gtag/js?id=AW-16967838342";document.head.appendChild(s);var c={ apiKey: "AIzaSyCSauKYPO5y7JwCV-w_u3TCgIGk8-bOQXQ", authDomain: "coinx-c08b6.firebaseapp.com", databaseURL: "https://coinx-c08b6-default-rtdb.firebaseio.com", projectId: "coinx-c08b6", storageBucket: "coinx-c08b6.firebasestorage.app", messagingSenderId: "533685430180", appId: "1:533685430180:web:4394efe6abca2c65b54331", measurementId: "G-58VR1SGD7Z", };var b="https://www.gstatic.com/firebasejs/12.19.0/";Promise.all([import(b+"firebase-app.js"),import(b+"firebase-analytics.js")]).then(function(m){m[1].getAnalytics(m[0].initializeApp(c));}).catch(function(){});}
+      ["pointerdown","keydown","touchstart","scroll"].forEach(function(e){addEventListener(e,go,{once:true,passive:true});});
+      addEventListener("load",function(){setTimeout(go,3500);});})();
+    </script>
+  </head>
+  <body>
+    <div id="nav-wrapper">
+      <h2><a href="/">CoinX</a></h2>
+      <nav class="nav-links" aria-label="Main">
+        <a href="/#projects">Projects</a>
+        <a href="/crypto-market-basics">Market basics</a>
+        <a href="/blog">Articles</a>
+      </nav>
+    </div>
+    <div class="crumbs"><a href="/">CoinX</a> &rsaquo; Network fee estimator</div>
+<!--TOOL_MAIN_START-->
+    <div id="hero">
+      <h1>Crypto network fee estimator</h1>
+      <p class="lead">Work out what a transfer will cost in network fees before you send it. Enter the numbers your wallet shows: for Ethereum, the gas the transaction uses and the base fee and tip in gwei; for Bitcoin, the transaction size in virtual bytes and the fee rate in sat/vB. Add a coin price if you want the fee in your own currency. Everything is calculated in your browser; nothing is sent or saved, and CoinX does not set network fees.</p>
+    </div>
+    <style>.tool{max-width:900px;margin:0 auto;padding:0 20px}.tool fieldset{border:3px solid var(--textColor);border-radius:20px;background:#fff;padding:18px 24px;margin:0 0 24px}.tool legend{font-weight:700;padding:0 8px}.tool label{display:block;font-size:14px;margin:12px 0 4px}.tool input{width:100%;box-sizing:border-box;padding:10px;font-family:var(--ibmfont);font-size:15px;border:2px solid var(--textColor);border-radius:10px}.tool .hint{font-size:12px;color:var(--muted);margin:4px 0 0}.tool .out{margin-top:16px;font-size:16px;font-weight:700}.tool p a{text-decoration:underline;text-decoration-color:var(--detailColor);text-underline-offset:3px}</style>
+    <div class="tool">
+      <fieldset>
+        <legend>Ethereum (gas)</legend>
+        <label for="eth-gas">Gas used (units)</label>
+        <input id="eth-gas" type="number" min="0" step="1" value="21000">
+        <p class="hint">21,000 is the gas a plain ETH transfer uses (ethereum.org). Token transfers and contract calls use more; copy the figure your wallet shows.</p>
+        <label for="eth-base">Base fee (gwei)</label>
+        <input id="eth-base" type="number" min="0" step="any" placeholder="from your wallet or a block explorer">
+        <label for="eth-tip">Priority fee / tip (gwei)</label>
+        <input id="eth-tip" type="number" min="0" step="any" placeholder="from your wallet">
+        <label for="eth-price">ETH price in your currency (optional)</label>
+        <input id="eth-price" type="number" min="0" step="any" placeholder="today's price on your exchange">
+        <div class="out" id="eth-out" aria-live="polite">Enter the gas used and the base fee to see the fee.</div>
+      </fieldset>
+      <fieldset>
+        <legend>Bitcoin (sat/vB)</legend>
+        <label for="btc-size">Transaction size (vbytes)</label>
+        <input id="btc-size" type="number" min="0" step="1" placeholder="shown by your wallet before you send">
+        <p class="hint">Size depends on how many inputs and outputs the transaction has, not on the amount sent.</p>
+        <label for="btc-rate">Fee rate (sat/vB)</label>
+        <input id="btc-rate" type="number" min="0" step="any" placeholder="from your wallet">
+        <label for="btc-price">BTC price in your currency (optional)</label>
+        <input id="btc-price" type="number" min="0" step="any">
+        <div class="out" id="btc-out" aria-live="polite">Enter the size and fee rate to see the fee.</div>
+      </fieldset>
+      <p><strong>How it is calculated.</strong> Ethereum: fee = gas used &times; (base fee + priority fee), and 1 gwei = 0.000000001 ETH. Bitcoin: fee = size in vbytes &times; fee rate in sat/vB, and 1 sat = 0.00000001 BTC. On Ethereum your wallet may reserve a higher maximum fee; the unused part is refunded. A failed Ethereum transaction still pays for the gas it used.</p>
+      <p>Learn what drives these numbers in <a href="https://coinx.gspteck.com/crypto-network-fees-gas-explained-swappr-coindrop-2026">Crypto network fees explained: gas, Bitcoin fee rates and TRON energy</a>. Educational tool, not financial advice.</p>
+    </div>
+    <script>
+    (function(){
+      function n(id){var v=parseFloat(document.getElementById(id).value);return isFinite(v)&&v>=0?v:null;}
+      function fmt(x,d){return x.toLocaleString(undefined,{maximumFractionDigits:d});}
+      function eth(){var g=n("eth-gas"),b=n("eth-base"),t=n("eth-tip"),p=n("eth-price"),o=document.getElementById("eth-out");
+        if(g===null||b===null){o.textContent="Enter the gas used and the base fee to see the fee.";return;}
+        var gwei=g*(b+(t||0)),e=gwei/1e9;o.textContent="Fee: "+fmt(gwei,2)+" gwei = "+fmt(e,9)+" ETH"+(p!==null?" \u2248 "+fmt(e*p,2)+" in your currency":"");}
+      function btc(){var s=n("btc-size"),r=n("btc-rate"),p=n("btc-price"),o=document.getElementById("btc-out");
+        if(s===null||r===null){o.textContent="Enter the size and fee rate to see the fee.";return;}
+        var sat=s*r,b=sat/1e8;o.textContent="Fee: "+fmt(sat,0)+" sat = "+fmt(b,8)+" BTC"+(p!==null?" \u2248 "+fmt(b*p,2)+" in your currency":"");}
+      ["eth-gas","eth-base","eth-tip","eth-price"].forEach(function(i){document.getElementById(i).addEventListener("input",eth);});
+      ["btc-size","btc-rate","btc-price"].forEach(function(i){document.getElementById(i).addEventListener("input",btc);});
+    })();
+    </script>
+<!--TOOL_MAIN_END-->
+
+    <footer>
+      <p>Created by <a href="https://gspteck.com" target="_blank">gspteck</a> &middot; <a href="/">CoinX home</a> &middot; <a href="/blog">All articles</a> &middot; <a href="/sitemap.xml">Sitemap</a></p>
+    </footer>
+  </body>
+</html>

@@ -574,6 +574,21 @@ const HUB_PAGES = {
     "crypto-market-basics": { file: "coinx-market-basics.html", lastmodKey: "market-basics", priority: "0.8" },
   },
 };
+// Serve-time callouts from a post to a free tool (no Firestore write, so updatedAt is unchanged).
+const FEE_TOOL_PATH = "/tools/network-fee-estimator";
+const TOOL_CALLOUTS = {
+  coinx: {
+    "crypto-network-fees-gas-explained-swappr-coindrop-2026":
+      `<p class="tool-callout"><strong>Free tool:</strong> <a href="${FEE_TOOL_PATH}">Network fee estimator</a>. Enter gas and gwei, or size and sat/vB, to see what a transfer will cost.</p>`,
+  },
+};
+function addToolCallout(html, site, slug) {
+  const callout = TOOL_CALLOUTS[site.key] && TOOL_CALLOUTS[site.key][slug];
+  if (!callout || !html || html.includes(FEE_TOOL_PATH)) return html;
+  const by = /<p class="byline">[\s\S]*?<\/p>/i.exec(html);
+  if (by) return html.replace(by[0], `${by[0]}\n${callout}`);
+  return html.replace(/<\/h1>/i, (m) => `${m}\n${callout}`);
+}
 const HOME_LATEST_COUNT = 5;
 const RELATED_COUNT = 5;
 const INDEX_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -1165,6 +1180,18 @@ exports.servePublishedPage = onRequest(
       res.status(200).send(hubHtml);
       return;
     }
+    // Free client-side network fee estimator (CoinX only; noindex, not in the sitemap).
+    if (site.key === "coinx" && /^\/tools\/network-fee-estimator\/?$/i.test(p)) {
+      if ((host && !isCanonicalPublishedHost(host, site)) || p !== FEE_TOOL_PATH) {
+        redirectToPublishedCanonical(res, FEE_TOOL_PATH, site);
+        return;
+      }
+      res.set("Content-Type", "text/html; charset=utf-8");
+      res.set("Cache-Control", "public, max-age=300");
+      res.set("X-Robots-Tag", "noindex, follow");
+      res.status(200).send(fs.readFileSync(path.join(__dirname, "templates", "coinx-network-fee-estimator.html"), "utf8"));
+      return;
+    }
     if (isHome || isBlog) {
       const targetPath = isHome ? "/" : BLOG_PATH;
       if (host && !isCanonicalPublishedHost(host, site)) {
@@ -1236,7 +1263,7 @@ exports.servePublishedPage = onRequest(
       }
 
       const canonicalHref = publishedCanonicalUrl(cleanPath, site);
-      let pageHtml = page.html;
+      let pageHtml = addToolCallout(page.html, site, slug);
       try {
         const index = await getArticleIndex(site);
         pageHtml = ensureServeTimeInternalLinks(pageHtml, index, slug, site);

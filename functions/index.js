@@ -28,7 +28,11 @@ const SITES = {
       h1: "Crypto airdrop, faucet and free token guides",
       description: "CoinDrop guides to crypto airdrops, faucets and free tokens: how claims work, where real opportunities come from, and checklists for spotting drainer sites, fake checkers and impersonation scams.",
       intro: "Guides to earning crypto from airdrops, faucets and free token offers without handing your wallet to a scammer. They explain how an airdrop moves from announcement to snapshot to claim, how faucets work and what they pay out, and where genuine free tokens tend to come from. Many are safety checklists for the claim step: fake eligibility checkers, wallet-draining approvals, address poisoning, impersonation in Discord and Telegram DMs, and blind signing on hardware wallets. CoinDrop is our own app for earning crypto through daily tasks; if you share its invite code, read our referral rewards tactics first, including where a referral link is allowed and how to disclose it.",
-      introLinks: [{ phrase: "referral rewards tactics", url: "https://coindrop.website/12-crypto-referral-rewards-tactics-that-actually-convert" }],
+      introLinks: [
+        { phrase: "earning crypto from airdrops, faucets and free token offers", url: "https://coindrop.website/ways-to-earn-crypto-guide-hub-2026" },
+        { phrase: "safety checklists", url: "https://coindrop.website/airdrop-safety-guide-hub-2026" },
+        { phrase: "referral rewards tactics", url: "https://coindrop.website/12-crypto-referral-rewards-tactics-that-actually-convert" },
+      ],
     },
     // Default Firebase Hosting hosts for this site's target (serve-side mapping only).
     altHosts: ["coindropapp.web.app", "coindropapp.firebaseapp.com"],

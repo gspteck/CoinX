@@ -23,6 +23,9 @@ const SOURCES = {
   "coinx/author": ["public/author/coinx-editorial.html"],
   "coindrop/author": ["coindrop-public/author/coindrop-editorial.html"],
   "swappr/author": ["swappr-public/author/swappr-editorial.html"],
+  "coinx/sitemap": ["functions/html-sitemap.js"],
+  "coindrop/sitemap": ["functions/html-sitemap.js"],
+  "swappr/sitemap": ["functions/html-sitemap.js"],
   "coindrop/home": [
     "functions/templates/coindrop-home.html"
   ],

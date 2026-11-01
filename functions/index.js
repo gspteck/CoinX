@@ -526,6 +526,13 @@ async function getPublishedSitemapEntries(site) {
       changefreq: "monthly",
     });
   }
+  // Crawlable HTML sitemap (functions/html-sitemap.js); its list changes whenever a post is published.
+  entries.push({
+    loc: `${s.baseUrl}${htmlSitemap.HTML_SITEMAP_PATH}`,
+    lastmod: newestIsoDate(STATIC_LASTMOD[`${s.key}/sitemap`], newestPost),
+    priority: "0.3",
+    changefreq: "weekly",
+  });
   for (const [hubSlug, hub] of Object.entries(HUB_PAGES[s.key] || {})) {
     entries.push({
       loc: `${s.baseUrl}/${hubSlug}`,
@@ -578,6 +585,52 @@ const HUB_PAGES = {
     "crypto-market-basics": { file: "coinx-market-basics.html", lastmodKey: "market-basics", priority: "0.8" },
   },
 };
+// === HTML sitemap (/sitemap) per site + footer "Sitemap" link (added at serve time) ===
+// Each site lists only its own sitemap.xml entries (never another site's posts).
+const htmlSitemap = require("./html-sitemap");
+const HTML_SITEMAP_LABELS = {
+  "coinx": {
+    "/": "CoinX: GSPTeck's crypto projects hub, home of CoinDrop and Swappr (homepage)",
+    "/blog": "Crypto exchange, wallet and app safety guides (all CoinX articles)",
+    "/author/coinx-editorial": "CoinX Editorial (GSPTeck): who writes the CoinX guides",
+    "/crypto-market-basics": "Crypto market basics: how prices, order books and exchanges work",
+  },
+  "coindrop": {
+    "/": "CoinDrop: earn crypto daily with airdrops and simple tasks (homepage)",
+    "/blog": "Crypto airdrop, faucet and free token guides (all CoinDrop articles)",
+    "/author/coindrop-editorial": "CoinDrop Editorial (GSPTeck): who writes the CoinDrop guides",
+  },
+  "swappr": {
+    "/": "Swappr: swap crypto coins in one place (homepage)",
+    "/blog": "Crypto swap guides (all Swappr articles)",
+    "/author/swappr-editorial": "Swappr Editorial (GSPTeck): who writes the Swappr guides",
+  },
+};
+// Where the "Sitemap" link goes in each homepage footer (templates are unchanged on disk).
+const HOME_SITEMAP_LINK = {
+  "coinx": { marker: "<footer>", anchor: '<a href="https://coinx.gspteck.com/blog">All articles</a>', insert: (href) => `\n        &middot; <a href="${href}">Sitemap</a>` },
+  "coindrop": { marker: '<h4 id="credits">', anchor: '<a href="https://coindrop.website/blog">All articles</a>', insert: (href) => ` &middot; <a href="${href}">Sitemap</a>` },
+  "swappr": { marker: '<footer class="site">', anchor: '<a href="https://swappr.website/blog">Blog</a>', insert: (href) => `\n          <a href="${href}">Sitemap</a>` },
+};
+function withSitemapFooterLink(html, kind, site) {
+  if (kind === "home") {
+    const cfg = HOME_SITEMAP_LINK[site.key];
+    return cfg ? htmlSitemap.addSitemapFooterLink(html, { baseUrl: site.baseUrl, ...cfg }) : html;
+  }
+  if (kind === "blog" || kind === "hub") {
+    // Footer already links /sitemap.xml as "Sitemap": point it at the HTML sitemap.
+    return htmlSitemap.addSitemapFooterLink(html, { baseUrl: site.baseUrl, marker: "<footer" });
+  }
+  // Posts: extend the serve-time archive nav (home · All articles · Sitemap).
+  return htmlSitemap.addSitemapFooterLink(html, {
+    baseUrl: site.baseUrl,
+    marker: "data-archive-nav",
+    anchor: ">All articles</a>",
+    insert: (href) => ` &middot; <a href="${href}">Sitemap</a>`,
+    fallback: (href) => `  <nav class="archive-nav" aria-label="Site links"><p><a href="${site.baseUrl}/">${escapeHtml(site.name || "Home")} home</a> &middot; <a href="${site.baseUrl}${BLOG_PATH}">All articles</a> &middot; <a href="${href}">Sitemap</a></p></nav>`,
+  });
+}
+
 // Serve-time callouts from a post to a free tool (no Firestore write, so updatedAt is unchanged).
 const FEE_TOOL_PATH = "/tools/network-fee-estimator";
 const TOOL_CALLOUTS = {
@@ -1181,7 +1234,32 @@ exports.servePublishedPage = onRequest(
       res.set("Content-Type", "text/html; charset=utf-8");
       res.set("Cache-Control", "public, max-age=300");
       res.set("Link", `<${publishedCanonicalUrl(hubPath, site)}>; rel="canonical"`);
-      res.status(200).send(hubHtml);
+      res.status(200).send(withSitemapFooterLink(hubHtml, "hub", site));
+      return;
+    }
+    // Crawlable HTML sitemap: /sitemap (/sitemap/ and /sitemap.html 301 to it). Lists this site only.
+    if (htmlSitemap.isHtmlSitemapPath(p)) {
+      if ((host && !isCanonicalPublishedHost(host, site)) || p !== htmlSitemap.HTML_SITEMAP_PATH) {
+        redirectToPublishedCanonical(res, htmlSitemap.HTML_SITEMAP_PATH, site);
+        return;
+      }
+      let index = [];
+      let entries = [];
+      try {
+        [index, entries] = await Promise.all([getArticleIndex(site), getPublishedSitemapEntries(site)]);
+      } catch (err) {
+        console.error("[servePublishedPage] html sitemap failed", err);
+        res.set("Cache-Control", "no-store");
+        res.status(503).type("text/plain").send("Sitemap temporarily unavailable");
+        return;
+      }
+      const out = htmlSitemap.renderHtmlSitemap({
+        siteName: site.name, baseUrl: site.baseUrl, blogPath: BLOG_PATH, entries, index, labels: HTML_SITEMAP_LABELS[site.key] || {},
+      });
+      res.set("Content-Type", "text/html; charset=utf-8");
+      res.set("Cache-Control", "public, max-age=300");
+      res.set("Link", `<${out.canonical}>; rel="canonical"`);
+      res.status(200).send(out.html);
       return;
     }
     // Free client-side network fee estimator (CoinX only; noindex, not in the sitemap).
@@ -1212,7 +1290,8 @@ exports.servePublishedPage = onRequest(
       } catch (err) {
         console.error("[servePublishedPage] article index failed", err);
       }
-      const html = isHome ? buildHomeHtml(index, site) : buildBlogArchiveHtml(index, site);
+      const built = isHome ? buildHomeHtml(index, site) : buildBlogArchiveHtml(index, site);
+      const html = built ? withSitemapFooterLink(built, isHome ? "home" : "blog", site) : built;
       if (!html) {
         seo.sendCachedNotFound(res, "Not found");
         return;
@@ -1274,6 +1353,7 @@ exports.servePublishedPage = onRequest(
       } catch (linkErr) {
         console.error("[servePublishedPage] related links failed", linkErr);
       }
+      pageHtml = withSitemapFooterLink(pageHtml, "post", site);
       const enhanced = seo.enhancePostHtml(ensureCanonicalLink(pageHtml, canonicalHref), {
         canonical: canonicalHref,
         publishedAt: page.publishedAt,

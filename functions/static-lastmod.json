@@ -16,6 +16,15 @@
     "swappr/author": [
       "swappr-public/author/swappr-editorial.html"
     ],
+    "coinx/sitemap": [
+      "functions/html-sitemap.js"
+    ],
+    "coindrop/sitemap": [
+      "functions/html-sitemap.js"
+    ],
+    "swappr/sitemap": [
+      "functions/html-sitemap.js"
+    ],
     "coindrop/home": [
       "functions/templates/coindrop-home.html"
     ],
@@ -53,6 +62,9 @@
     "coinx/author": "2026-10-31",
     "coindrop/author": "2026-10-31",
     "swappr/author": "2026-10-31",
+    "coinx/sitemap": "2026-11-01",
+    "coindrop/sitemap": "2026-11-01",
+    "swappr/sitemap": "2026-11-01",
     "coindrop/home": "2026-10-31",
     "swappr/home": "2026-10-31",
     "coinx/blog": "2026-10-25",

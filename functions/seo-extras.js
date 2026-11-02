@@ -4,8 +4,23 @@
  *    any Firestore read or analytics logging.
  *  - enhancePostHtml: robots meta (index, follow, max-image-preview:large), BlogPosting
  *    JSON-LD from the stored post + Firestore dates, and a rel="author" byline link.
+ *  - optimizePostImages (rule 48/49 image template, serve time, no Firestore write so no
+ *    lastmod bump): width/height on every in-post <img>, the lead image eager with
+ *    fetchpriority="high", the rest loading="lazy", decoding="async", and a WebP <source>
+ *    in a <picture> where image-variants.json has a WebP copy (original PNG/JPEG kept as fallback).
+ *  - og:image / twitter:image from the lead image when a post has none; og:url = canonical.
  *  - romeToday / xmlEscape utilities.
  */
+
+// image-variants.json: { "<original https src>": { w, h, webp? } } measured from the real files
+// (scripts/build_image_variants.py). Missing file = tag attributes only.
+let IMAGE_VARIANTS = {};
+try {
+  // eslint-disable-next-line global-require
+  IMAGE_VARIANTS = require("./image-variants.json");
+} catch (_e) {
+  IMAGE_VARIANTS = {};
+}
 
 const NOT_FOUND_CACHE = "public, max-age=300, s-maxage=300";
 
@@ -89,6 +104,164 @@ function jsonForScript(obj) {
   return JSON.stringify(obj).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
 }
 
+function escapeAttr(str) {
+  return String(str == null ? "" : str)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/** Read an attribute value from a single tag (quoted or bare). */
+function getAttr(tag, name) {
+  const m = new RegExp(`(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'>]+))`, "i").exec(tag);
+  if (!m) return null;
+  return m[1] != null ? m[1] : m[2] != null ? m[2] : m[3];
+}
+
+/** Set (replace or append) an attribute on a single tag. value is inserted already escaped. */
+function setAttr(tag, name, value) {
+  const re = new RegExp(`(\\s)${name}\\s*=\\s*(?:"[^"]*"|'[^']*'|[^\\s"'>]+)`, "i");
+  if (re.test(tag)) return tag.replace(re, (_m, sp) => `${sp}${name}="${value}"`);
+  return tag.replace(/\s*(\/?)>$/, (_m, slash) => ` ${name}="${value}"${slash ? " /" : ""}>`);
+}
+
+function posInt(v) {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+}
+
+/**
+ * Image template for a stored post (body only; header logos with relative src are untouched).
+ * Returns { html, lead } where lead = { url, width, height, alt } of the first https <img>.
+ */
+function optimizePostImages(html, variants = IMAGE_VARIANTS) {
+  if (!html || typeof html !== "string") return { html, lead: null };
+  const bodyStart = html.search(/<body\b/i);
+  const start = bodyStart >= 0 ? bodyStart : 0;
+  const before = html.slice(0, start);
+  let body = html.slice(start);
+  let lead = null;
+  let count = 0;
+  const table = variants || {};
+  body = body.replace(/<picture\b[\s\S]*?<\/picture>|<img\b[^>]*>/gi, (chunk) => {
+    const inPicture = /^<picture/i.test(chunk);
+    const imgM = inPicture ? /<img\b[^>]*>/i.exec(chunk) : [chunk];
+    if (!imgM) return chunk;
+    const tag = imgM[0];
+    const src = decodeEntities(getAttr(tag, "src") || "").trim();
+    if (!/^https:\/\//i.test(src)) return chunk;
+    const v = table[src] || {};
+    const isLead = count === 0;
+    count += 1;
+    let t = tag;
+    // Real file size wins (tag values only when the file was not measured).
+    const fw = posInt(v.w);
+    const fh = posInt(v.h);
+    if (fw && fh) {
+      t = setAttr(t, "width", String(fw));
+      t = setAttr(t, "height", String(fh));
+    }
+    if (isLead) {
+      t = setAttr(t, "loading", "eager");
+      if (!getAttr(t, "fetchpriority")) t = setAttr(t, "fetchpriority", "high");
+    } else if (!getAttr(t, "loading")) {
+      t = setAttr(t, "loading", "lazy");
+    }
+    if (!getAttr(t, "decoding")) t = setAttr(t, "decoding", "async");
+    if (isLead) {
+      lead = {
+        url: src,
+        width: posInt(getAttr(t, "width")),
+        height: posInt(getAttr(t, "height")),
+        alt: decodeEntities(getAttr(t, "alt") || "").replace(/\s+/g, " ").trim(),
+      };
+    }
+    if (inPicture) return chunk.replace(tag, t);
+    if (v.webp && /^https:\/\//i.test(v.webp) && !/\.(?:webp|avif)(?:[?#]|$)/i.test(src)) {
+      return `<picture><source type="image/webp" srcset="${escapeAttr(v.webp)}">${t}</picture>`;
+    }
+    return t;
+  });
+  return { html: before + body, lead };
+}
+
+function metaTagRe(attrName, key) {
+  return new RegExp(`<meta\\b[^>]*\\b${attrName}\\s*=\\s*["']${key.replace(/:/g, "\\:")}["'][^>]*>`, "i");
+}
+
+/** og:image/twitter:image from the lead image when missing; og:url matches the canonical. */
+function ensureSocialImageTags(html, lead, opts = {}) {
+  let out = html;
+  const tags = [];
+  if (opts.canonical) {
+    const ogUrl = metaTagRe("property", "og:url").exec(out);
+    if (ogUrl) {
+      const cur = getAttr(ogUrl[0], "content");
+      if (cur !== opts.canonical) out = out.replace(ogUrl[0], `<meta property="og:url" content="${escapeAttr(opts.canonical)}">`);
+    }
+  }
+  if (!lead || !lead.url) return out;
+  if (metaTagRe("property", "og:image").test(out)) return out;
+  if (!metaTagRe("property", "og:type").test(out)) tags.push(`<meta property="og:type" content="article">`);
+  if (!metaTagRe("property", "og:title").test(out) && opts.headline) tags.push(`<meta property="og:title" content="${escapeAttr(opts.headline)}">`);
+  if (!metaTagRe("property", "og:description").test(out) && opts.description) tags.push(`<meta property="og:description" content="${escapeAttr(opts.description)}">`);
+  if (!metaTagRe("property", "og:url").test(out) && opts.canonical) tags.push(`<meta property="og:url" content="${escapeAttr(opts.canonical)}">`);
+  tags.push(`<meta property="og:image" content="${escapeAttr(lead.url)}">`);
+  if (lead.width && lead.height) {
+    tags.push(`<meta property="og:image:width" content="${lead.width}">`);
+    tags.push(`<meta property="og:image:height" content="${lead.height}">`);
+  }
+  if (lead.alt) tags.push(`<meta property="og:image:alt" content="${escapeAttr(lead.alt)}">`);
+  if (!metaTagRe("name", "twitter:card").test(out)) tags.push(`<meta name="twitter:card" content="summary_large_image">`);
+  if (!metaTagRe("name", "twitter:image").test(out)) tags.push(`<meta name="twitter:image" content="${escapeAttr(lead.url)}">`);
+  if (lead.alt && !metaTagRe("name", "twitter:image:alt").test(out)) tags.push(`<meta name="twitter:image:alt" content="${escapeAttr(lead.alt)}">`);
+  return out.replace(/<\/head>/i, `  ${tags.join("\n  ")}\n</head>`);
+}
+
+function leadImageObject(lead) {
+  if (!lead || !lead.url) return null;
+  return {
+    "@type": "ImageObject",
+    url: lead.url,
+    contentUrl: lead.url,
+    ...(lead.width ? { width: lead.width } : {}),
+    ...(lead.height ? { height: lead.height } : {}),
+    ...(lead.alt ? { caption: lead.alt } : {}),
+  };
+}
+
+/** Upgrade a bare image URL in a stored BlogPosting/Article JSON-LD to the lead ImageObject. */
+function upgradeStoredLdImage(html, lead) {
+  const obj = leadImageObject(lead);
+  if (!obj) return html;
+  return html.replace(/(<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>)([\s\S]*?)(<\/script>)/gi, (m, open, json, close) => {
+    if (!/"@type"\s*:\s*"(?:BlogPosting|Article|NewsArticle)"/.test(json)) return m;
+    let data;
+    try {
+      data = JSON.parse(json);
+    } catch (_e) {
+      return m;
+    }
+    let changed = false;
+    const fix = (node) => {
+      if (!node || typeof node !== "object") return;
+      if (Array.isArray(node)) { node.forEach(fix); return; }
+      if (/^(?:BlogPosting|Article|NewsArticle)$/.test(String(node["@type"] || ""))) {
+        const img = node.image;
+        const first = Array.isArray(img) ? img[0] : img;
+        if (first == null || typeof first === "string") {
+          node.image = obj;
+          changed = true;
+        }
+      }
+      if (Array.isArray(node["@graph"])) node["@graph"].forEach(fix);
+    };
+    fix(data);
+    return changed ? `${open}${jsonForScript(data)}${close}` : m;
+  });
+}
+
 const ROBOTS_POST = "index, follow, max-image-preview:large";
 
 function ensureRobotsMeta(html) {
@@ -125,7 +298,10 @@ function enhancePostHtml(html, opts = {}) {
     out = out.replace(by[0], `${by[1]}<a href="${author.url}" rel="author">${by[2]}</a>${by[3]}`);
   }
 
-  if (/"@type"\s*:\s*"(?:BlogPosting|Article|NewsArticle)"/.test(out)) return out;
+  // Image template (lead eager + WebP <picture> + dimensions), then social tags from the lead.
+  const imgs = optimizePostImages(out, opts.imageVariants || IMAGE_VARIANTS);
+  out = imgs.html;
+  const lead = imgs.lead;
 
   const h1 = /<h1\b[^>]*>([\s\S]*?)<\/h1>/i.exec(out);
   const title = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(out);
@@ -133,9 +309,11 @@ function enhancePostHtml(html, opts = {}) {
   const descM = /<meta\b[^>]*\bname\s*=\s*["']description["'][^>]*>/i.exec(out);
   const descC = descM && /\bcontent\s*=\s*"([^"]*)"/i.exec(descM[0]);
   const description = descC ? decodeEntities(descC[1]).trim() : "";
-  // Lead image: first https <img> in the article body.
-  const bodyStart = out.search(/<body\b/i);
-  const imgM = /<img\b[^>]*\bsrc\s*=\s*["'](https:\/\/[^"']+)["']/i.exec(bodyStart >= 0 ? out.slice(bodyStart) : out);
+  out = ensureSocialImageTags(out, lead, { canonical: opts.canonical, headline, description });
+
+  if (/"@type"\s*:\s*"(?:BlogPosting|Article|NewsArticle)"/.test(out)) return upgradeStoredLdImage(out, lead);
+
+  const imageObj = leadImageObject(lead);
   const datePublished = tsToIso(opts.publishedAt);
   const dateModified = tsToIso(opts.updatedAt) || datePublished;
   if (!headline || !datePublished || !opts.canonical) return out;
@@ -145,7 +323,7 @@ function enhancePostHtml(html, opts = {}) {
     "@type": "BlogPosting",
     headline,
     ...(description ? { description } : {}),
-    ...(imgM ? { image: [imgM[1]] } : {}),
+    ...(imageObj ? { image: imageObj } : {}),
     datePublished,
     dateModified: dateModified < datePublished ? datePublished : dateModified,
     ...(author.name ? {
@@ -187,4 +365,7 @@ module.exports = {
   xmlEscape,
   enhancePostHtml,
   ensureRobotsMeta,
+  optimizePostImages,
+  ensureSocialImageTags,
+  upgradeStoredLdImage,
 };

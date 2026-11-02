@@ -61,10 +61,13 @@ const SOURCES = {
 function git(args) {
   return execFileSync("git", args, { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
 }
+// Rule 43: commits whose message contains [no-lastmod] (link-only or template-only edits)
+// do not move a page's lastmod.
+const SKIP = ["--fixed-strings", "--invert-grep", "--grep=[no-lastmod]"];
 function lastDate(src) {
   const args = typeof src === "string"
-    ? ["log", "-1", "--format=%cs", "--", src]
-    : ["log", "-1", "--format=%cs", "-s", "-L", src.L];
+    ? ["log", "-1", "--format=%cs", ...SKIP, "--", src]
+    : ["log", "-1", "--format=%cs", ...SKIP, "-s", "-L", src.L];
   const out = git(args).split("\n")[0].trim();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(out)) throw new Error(`no git date for ${JSON.stringify(src)}`);
   return out;

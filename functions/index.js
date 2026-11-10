@@ -4,6 +4,7 @@ const admin = require("firebase-admin");
 const crypto = require("crypto");
 const express = require("express");
 const seo = require("./seo-extras");
+const adsense = require("./adsense");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -335,7 +336,7 @@ function buildPublishedHtml(post, relatedArticles, site) {
         html = html + relatedHtml;
       }
     }
-    return stripRichAdsFromHtml(ensureCanonicalLink(html, canonicalHref));
+    return adsense.withAdSenseOnPost(stripRichAdsFromHtml(ensureCanonicalLink(html, canonicalHref)));
   }
 
   // Build a clean standalone HTML document
@@ -343,7 +344,7 @@ function buildPublishedHtml(post, relatedArticles, site) {
     ? `<script type="application/ld+json">${jsonLd}</script>`
     : "";
 
-  return stripRichAdsFromHtml(`<!DOCTYPE html>
+  return adsense.withAdSenseOnPost(stripRichAdsFromHtml(`<!DOCTYPE html>
 <html lang="${escapeHtml(post.language || "en")}">
 <head>
   <meta charset="UTF-8">
@@ -371,7 +372,7 @@ function buildPublishedHtml(post, relatedArticles, site) {
   </article>
   ${relatedHtml}
 </body>
-</html>`);
+</html>`));
 }
 
 function sanitizeSlug(raw) {
@@ -1240,7 +1241,7 @@ exports.servePublishedPage = onRequest(
       res.set("Content-Type", "text/html; charset=utf-8");
       res.set("Cache-Control", "public, max-age=300");
       res.set("Link", `<${publishedCanonicalUrl(hubPath, site)}>; rel="canonical"`);
-      res.status(200).send(withSitemapFooterLink(hubHtml, "hub", site));
+      res.status(200).send(adsense.ensureAdSenseAccountMeta(withSitemapFooterLink(hubHtml, "hub", site)));
       return;
     }
     // Crawlable HTML sitemap: /sitemap (/sitemap/ and /sitemap.html 301 to it). Lists this site only.
@@ -1265,7 +1266,7 @@ exports.servePublishedPage = onRequest(
       res.set("Content-Type", "text/html; charset=utf-8");
       res.set("Cache-Control", "public, max-age=300");
       res.set("Link", `<${out.canonical}>; rel="canonical"`);
-      res.status(200).send(out.html);
+      res.status(200).send(adsense.ensureAdSenseAccountMeta(out.html));
       return;
     }
     // Free client-side network fee estimator (CoinX only; noindex, not in the sitemap).
@@ -1277,7 +1278,7 @@ exports.servePublishedPage = onRequest(
       res.set("Content-Type", "text/html; charset=utf-8");
       res.set("Cache-Control", "public, max-age=300");
       res.set("X-Robots-Tag", "noindex, follow");
-      res.status(200).send(fs.readFileSync(path.join(__dirname, "templates", "coinx-network-fee-estimator.html"), "utf8"));
+      res.status(200).send(adsense.ensureAdSenseAccountMeta(fs.readFileSync(path.join(__dirname, "templates", "coinx-network-fee-estimator.html"), "utf8")));
       return;
     }
     if (isHome || isBlog) {
@@ -1306,7 +1307,7 @@ exports.servePublishedPage = onRequest(
       res.set("Content-Type", "text/html; charset=utf-8");
       res.set("Cache-Control", "public, max-age=60");
       res.set("Link", `<${canonicalHref}>; rel="canonical"`);
-      res.status(200).send(html);
+      res.status(200).send(adsense.ensureAdSenseAccountMeta(html));
       return;
     }
 
@@ -1367,11 +1368,12 @@ exports.servePublishedPage = onRequest(
         author: { type: "Organization", url: `${site.baseUrl}${AUTHOR_PAGES[site.key]}` },
         publisher: seo.GSPTECK_PUBLISHER,
       });
-      const html = stripRichAdsFromHtml(enhanced);
+      const html = adsense.withAdSenseOnPost(stripRichAdsFromHtml(enhanced));
 
       res.set("Content-Type", "text/html; charset=utf-8");
       res.set("Cache-Control", "public, max-age=300");
       res.set("Link", `<${canonicalHref}>; rel="canonical"`);
+      adsense.setAdSenseCsp(res);
       res.status(200).send(html);
     } catch (err) {
       console.error("[servePublishedPage] error", err);

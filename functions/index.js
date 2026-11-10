@@ -21,7 +21,6 @@ const SITES = {
     collection: "coindropPages",
     canonicalHosts: ["coindrop.website"],
     mediaPrefix: "coindrop-media",
-    richAdsSiteId: "407900",
     name: "CoinDrop",
     // Hand-written /blog copy (title, H1, meta description, intro shown above the list).
     blog: {
@@ -44,7 +43,6 @@ const SITES = {
     collection: "coinxPages",
     canonicalHosts: ["coinx.gspteck.com"],
     mediaPrefix: "coinx-media",
-    richAdsSiteId: "407899",
     name: "CoinX",
     // Hand-written /blog copy (title, H1, meta description, intro shown above the list).
     blog: {
@@ -62,8 +60,6 @@ const SITES = {
     collection: "swapprPages",
     canonicalHosts: ["swappr.website"],
     mediaPrefix: "swappr-media",
-    // Set when a RichAds site id exists; empty skips inject (ensureRichAdsInHead guards).
-    richAdsSiteId: "409485",
     name: "Swappr",
     // Hand-written /blog copy (title, H1, meta description, intro shown above the list).
     blog: {
@@ -286,19 +282,17 @@ function ensureCanonicalLink(html, canonicalHref) {
 
 
 /**
- * Inject RichAds pop script into <head> once (idempotent).
- * Posts only — call from buildPublishedHtml / servePublishedPage.
- * Never use on static landings (index.html, marketing, policy, etc.).
+ * Remove leftover RichAds pop scripts and richinfo.co tags from stored or
+ * assembled post HTML. RichAds has been removed from these sites.
  */
-function ensureRichAdsInHead(html, siteId) {
-  if (!html || typeof html !== "string" || !siteId) return html;
-  if (/richads-pu-ob\.js/i.test(html)) return html;
-  const tag = `<script src="https://richinfo.co/richpartners/pops/js/richads-pu-ob.js" data-pubid="987835" data-siteid="${String(siteId)}" async data-cfasync="false"></script>`;
-  if (/<head[^>]*>/i.test(html)) {
-    return html.replace(/<head[^>]*>/i, (m) => `${m}\n  ${tag}`);
-  }
-  return `${tag}\n${html}`;
+function stripRichAdsFromHtml(html) {
+  if (!html || typeof html !== "string") return html;
+  return html
+    .replace(/<script\b[^>]*\bsrc\s*=\s*["'][^"']*richads-pu-ob\.js[^"']*["'][^>]*>\s*<\/script>/gi, "")
+    .replace(/<script\b[^>]*\bsrc\s*=\s*["'][^"']*richinfo\.co[^"']*["'][^>]*>\s*<\/script>/gi, "")
+    .replace(/<link\b[^>]*\bhref\s*=\s*["'][^"']*richinfo\.co[^"']*["'][^>]*\/?>/gi, "");
 }
+
 
 function buildPublishedHtml(post, relatedArticles, site) {
   const s = site || DEFAULT_SITE;
@@ -341,7 +335,7 @@ function buildPublishedHtml(post, relatedArticles, site) {
         html = html + relatedHtml;
       }
     }
-    return ensureRichAdsInHead(ensureCanonicalLink(html, canonicalHref), s.richAdsSiteId);
+    return stripRichAdsFromHtml(ensureCanonicalLink(html, canonicalHref));
   }
 
   // Build a clean standalone HTML document
@@ -349,7 +343,7 @@ function buildPublishedHtml(post, relatedArticles, site) {
     ? `<script type="application/ld+json">${jsonLd}</script>`
     : "";
 
-  return ensureRichAdsInHead(`<!DOCTYPE html>
+  return stripRichAdsFromHtml(`<!DOCTYPE html>
 <html lang="${escapeHtml(post.language || "en")}">
 <head>
   <meta charset="UTF-8">
@@ -377,7 +371,7 @@ function buildPublishedHtml(post, relatedArticles, site) {
   </article>
   ${relatedHtml}
 </body>
-</html>`, s.richAdsSiteId);
+</html>`);
 }
 
 function sanitizeSlug(raw) {
@@ -1373,7 +1367,7 @@ exports.servePublishedPage = onRequest(
         author: { type: "Organization", url: `${site.baseUrl}${AUTHOR_PAGES[site.key]}` },
         publisher: seo.GSPTECK_PUBLISHER,
       });
-      const html = ensureRichAdsInHead(enhanced, site.richAdsSiteId);
+      const html = stripRichAdsFromHtml(enhanced);
 
       res.set("Content-Type", "text/html; charset=utf-8");
       res.set("Cache-Control", "public, max-age=300");

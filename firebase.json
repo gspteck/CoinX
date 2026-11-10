@@ -79,7 +79,7 @@
           "headers": [
             {
               "key": "Cache-Control",
-              "value": "public, max-age=300, must-revalidate"
+              "value": "public, max-age=60, must-revalidate"
             }
           ]
         }
@@ -194,6 +194,78 @@
               "value": "text/plain; charset=utf-8"
             }
           ]
+        }
+      ],
+      "redirects": [
+        {
+          "source": "/airdrop-tracker-basics-for-crypto-users",
+          "destination": "/evaluating-airdrop-tracker-options-for-users",
+          "type": 301
+        },
+        {
+          "source": "/airdrop-tracker-guide-for-crypto-opportunities",
+          "destination": "/evaluating-airdrop-tracker-options-for-users",
+          "type": 301
+        },
+        {
+          "source": "/advanced-considerations-for-airdrop-tracker-selection",
+          "destination": "/evaluating-airdrop-tracker-options-for-users",
+          "type": 301
+        },
+        {
+          "source": "/crypto-wallet-essentials-for-asset-security",
+          "destination": "/crypto-wallet-fundamentals-for-blockchain-users",
+          "type": 301
+        },
+        {
+          "source": "/crypto-wallet-essentials-for-blockchain-users",
+          "destination": "/crypto-wallet-fundamentals-for-blockchain-users",
+          "type": 301
+        },
+        {
+          "source": "/crypto-wallet-choices-for-airdrop-hunters",
+          "destination": "/crypto-wallet-options-for-airdrop-and-faucet-users",
+          "type": 301
+        },
+        {
+          "source": "/crypto-wallet-essentials-for-airdrop-hunters",
+          "destination": "/crypto-wallet-options-for-airdrop-and-faucet-users",
+          "type": 301
+        },
+        {
+          "source": "/crypto-wallet-role-in-airdrop-and-faucet-participation",
+          "destination": "/crypto-wallet-options-for-airdrop-and-faucet-users",
+          "type": 301
+        },
+        {
+          "source": "/crypto-wallet-use-for-airdrops-and-faucets",
+          "destination": "/crypto-wallet-options-for-airdrop-and-faucet-users",
+          "type": 301
+        },
+        {
+          "source": "/crypto-wallet-uses-in-token-distribution-events",
+          "destination": "/crypto-wallet-options-for-airdrop-and-faucet-users",
+          "type": 301
+        },
+        {
+          "source": "/cryptocurrency-airdrop-insights",
+          "destination": "/cryptocurrency-airdrop-explained",
+          "type": 301
+        },
+        {
+          "source": "/cryptocurrency-airdrop-overview-blockchain-users",
+          "destination": "/cryptocurrency-airdrop-explained",
+          "type": 301
+        },
+        {
+          "source": "/cryptocurrency-airdrop-participation-realities",
+          "destination": "/cryptocurrency-airdrop-explained",
+          "type": 301
+        },
+        {
+          "source": "/avoiding-scams-in-cryptocurrency-airdrop-participation",
+          "destination": "/cryptocurrency-airdrop-safety-considerations",
+          "type": 301
         }
       ],
       "rewrites": [

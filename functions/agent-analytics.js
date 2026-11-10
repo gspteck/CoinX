@@ -37,6 +37,22 @@ const AGENTS = [
   { re: /anthropic-ai|Claude-Web/i, agent: "anthropic-ai", family: "anthropic", kind: "ai-training" },
   { re: /Perplexity-User/i, agent: "Perplexity-User", family: "perplexity", kind: "user-fetch", ip: "perplexity-user" },
   { re: /PerplexityBot/i, agent: "PerplexityBot", family: "perplexity", kind: "ai-search", ip: "perplexitybot" },
+  // Firebase Hosting rewrites Google crawler tokens in the User-Agent before they reach the function
+  // ("Googlebot/2.1" -> "Google-Firebase/2.1", "Googlebot-Image/1.0" -> "Google-Firebase-Image/1.0",
+  // "GoogleOther" -> "Google-Firebase"), so these must be matched explicitly. Confirmed live 2026-11-10.
+  { re: /Google-Firebase\/2\.1/i, agent: "Googlebot", family: "google", kind: "search", ip: "google-common" },
+  { re: /Google-Firebase-Image/i, agent: "Googlebot-Image", family: "google", kind: "search", ip: "google-common" },
+  { re: /Google-Firebase-News/i, agent: "Googlebot-News", family: "google", kind: "search", ip: "google-common" },
+  { re: /Google-Firebase-Video/i, agent: "Googlebot-Video", family: "google", kind: "search", ip: "google-common" },
+  // Bare "Google-Firebase" (no version) is ambiguous after the rewrite (GoogleOther or Google's own Firebase agent).
+  { re: /Google-Firebase/i, agent: "Google-Firebase", family: "google", kind: "crawler", ip: "google-common" },
+  { re: /AdsBot-Google/i, agent: "AdsBot-Google", family: "google", kind: "ads", ip: "google-common" },
+  { re: /Mediapartners-Google/i, agent: "Mediapartners-Google", family: "google", kind: "ads", ip: "google-common" },
+  { re: /Storebot-Google/i, agent: "Storebot-Google", family: "google", kind: "shopping", ip: "google-common" },
+  { re: /FeedFetcher-Google/i, agent: "FeedFetcher-Google", family: "google", kind: "user-fetch", ip: "google-user" },
+  { re: /Google-Read-Aloud/i, agent: "Google-Read-Aloud", family: "google", kind: "user-fetch", ip: "google-user" },
+  { re: /Google-Site-Verification/i, agent: "Google-Site-Verification", family: "google", kind: "user-fetch", ip: "google-user" },
+  { re: /Google-Safety/i, agent: "Google-Safety", family: "google", kind: "security", ip: "google-common" },
   { re: /Google-CloudVertexBot/i, agent: "Google-CloudVertexBot", family: "google", kind: "ai-agent", ip: "google-common" },
   { re: /Google-InspectionTool/i, agent: "Google-InspectionTool", family: "google", kind: "search", ip: "google-common" },
   { re: /GoogleOther/i, agent: "GoogleOther", family: "google", kind: "ai-training", ip: "google-common" },

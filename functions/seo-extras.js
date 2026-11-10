@@ -202,7 +202,29 @@ function ensureSocialImageTags(html, lead, opts = {}) {
     }
   }
   if (!lead || !lead.url) return out;
-  if (metaTagRe("property", "og:image").test(out)) return out;
+  const existingOg = metaTagRe("property", "og:image").exec(out);
+  if (existingOg) {
+    // A site-wide generic share image (opts.genericOgImage, e.g. PilotaSEO's /assets/og-image.png) is swapped
+    // for the post's own lead image; any other og:image set by the post itself is kept.
+    if (!opts.genericOgImage || getAttr(existingOg[0], "content") !== opts.genericOgImage) return out;
+    const swap = (re, repl) => { out = re.test(out) ? out.replace(re, repl) : out; };
+    swap(metaTagRe("property", "og:image"), `<meta property="og:image" content="${escapeAttr(lead.url)}">`);
+    if (lead.width && lead.height) {
+      const w = `<meta property="og:image:width" content="${lead.width}">`;
+      const h = `<meta property="og:image:height" content="${lead.height}">`;
+      if (metaTagRe("property", "og:image:width").test(out)) swap(metaTagRe("property", "og:image:width"), w);
+      else out = out.replace(/(<meta property="og:image" [^>]*>)/i, `$1\n  ${w}`);
+      if (metaTagRe("property", "og:image:height").test(out)) swap(metaTagRe("property", "og:image:height"), h);
+      else out = out.replace(/(<meta property="og:image:width" [^>]*>)/i, `$1\n  ${h}`);
+    }
+    const extra = [];
+    if (lead.alt && !metaTagRe("property", "og:image:alt").test(out)) extra.push(`<meta property="og:image:alt" content="${escapeAttr(lead.alt)}">`);
+    if (metaTagRe("name", "twitter:image").test(out)) swap(metaTagRe("name", "twitter:image"), `<meta name="twitter:image" content="${escapeAttr(lead.url)}">`);
+    else extra.push(`<meta name="twitter:image" content="${escapeAttr(lead.url)}">`);
+    if (lead.alt && !metaTagRe("name", "twitter:image:alt").test(out)) extra.push(`<meta name="twitter:image:alt" content="${escapeAttr(lead.alt)}">`);
+    if (extra.length) out = out.replace(/<\/head>/i, `  ${extra.join("\n  ")}\n</head>`);
+    return out;
+  }
   if (!metaTagRe("property", "og:type").test(out)) tags.push(`<meta property="og:type" content="article">`);
   if (!metaTagRe("property", "og:title").test(out) && opts.headline) tags.push(`<meta property="og:title" content="${escapeAttr(opts.headline)}">`);
   if (!metaTagRe("property", "og:description").test(out) && opts.description) tags.push(`<meta property="og:description" content="${escapeAttr(opts.description)}">`);
@@ -309,7 +331,7 @@ function enhancePostHtml(html, opts = {}) {
   const descM = /<meta\b[^>]*\bname\s*=\s*["']description["'][^>]*>/i.exec(out);
   const descC = descM && /\bcontent\s*=\s*"([^"]*)"/i.exec(descM[0]);
   const description = descC ? decodeEntities(descC[1]).trim() : "";
-  out = ensureSocialImageTags(out, lead, { canonical: opts.canonical, headline, description });
+  out = ensureSocialImageTags(out, lead, { canonical: opts.canonical, headline, description, genericOgImage: opts.genericOgImage });
 
   if (/"@type"\s*:\s*"(?:BlogPosting|Article|NewsArticle)"/.test(out)) return upgradeStoredLdImage(out, lead);
 

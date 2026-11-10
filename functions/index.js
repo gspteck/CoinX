@@ -7,6 +7,7 @@ const seo = require("./seo-extras");
 
 admin.initializeApp();
 const db = admin.firestore();
+const { bumpIndexEpoch, createEpochReader } = require("./index-epoch");
 
 // === Published content configuration (multi-tenant: one Firebase project, N sites) ===
 // Each site is a separate brand/domain with its own Firestore collection and media prefix.
@@ -398,18 +399,20 @@ function isValidHtml(str) {
   return /<!doctype|<html|<head|<body/i.test(t);
 }
 
-async function savePublishedPage(slug, html, collection, h1Title) {
+async function savePublishedPage(slug, html, collection, h1Title, opts = {}) {
   const now = admin.firestore.FieldValue.serverTimestamp();
   const ref = db.collection(collection || DEFAULT_SITE.collection).doc(slug);
   const existing = await ref.get();
   // publishedAt is set on first save only; updates refresh updatedAt alone.
   const firstSave = !existing.exists || !existing.get("publishedAt");
+  // link_only update (existing page only): updatedAt (dateModified, sitemap lastmod) stays as stored.
+  const keepUpdatedAt = Boolean(opts.linkOnly && existing.exists && existing.get("updatedAt"));
   await ref.set({
     slug,
     html,
     ...(typeof h1Title === "string" && h1Title.trim() ? { title: h1Title.trim() } : {}),
     ...(firstSave ? { publishedAt: now } : {}),
-    updatedAt: now,
+    ...(keepUpdatedAt ? {} : { updatedAt: now }),
   }, { merge: true });
 }
 
@@ -724,6 +727,7 @@ function slugTokens(slug) {
 }
 
 const _articleIndexCache = {};
+const _epochReaders = {};
 
 /**
  * Lightweight index of every published page for a site (newest first).
@@ -732,8 +736,12 @@ const _articleIndexCache = {};
  */
 async function getArticleIndex(site) {
   const s = site || DEFAULT_SITE;
+  // contentenginePublish bumps meta/articleIndexEpoch (per site key); rebuild as soon as it changes (TTL = fallback).
+  if (!_epochReaders[s.key]) _epochReaders[s.key] = createEpochReader(db, s.key);
+  const epoch = await _epochReaders[s.key].read();
   const cached = _articleIndexCache[s.key];
-  if (cached && Date.now() - cached.at < INDEX_CACHE_TTL_MS) return cached.items;
+  if (cached && Date.now() - cached.at < INDEX_CACHE_TTL_MS && cached.epoch === epoch) return cached.items;
+  const builtAtEpoch = await _epochReaders[s.key].read(true); // read before listing: a mid-build publish forces another rebuild
   const snap = await db.collection(s.collection).get();
   const items = [];
   for (const d of snap.docs) {
@@ -752,7 +760,7 @@ async function getArticleIndex(site) {
     });
   }
   items.sort((a, b) => b.ms - a.ms || a.slug.localeCompare(b.slug));
-  _articleIndexCache[s.key] = { at: Date.now(), items };
+  _articleIndexCache[s.key] = { at: Date.now(), items, epoch: builtAtEpoch };
   return items;
 }
 
@@ -1120,7 +1128,10 @@ contentengineApp.all(/.*/, async (req, res) => {
 
       // related_articles: internal links contentengine expects on the live page for crawl paths
       const fullHtml = buildPublishedHtml(post, payload.related_articles, activeSite);
-      await savePublishedPage(slug, fullHtml, activeSite.collection, post.title);
+      // Optional link_only (post.update only): update the body/links without touching updatedAt.
+      const linkOnly = event === "post.update" && (payload.link_only === true || post.link_only === true);
+      await savePublishedPage(slug, fullHtml, activeSite.collection, post.title, { linkOnly });
+      await bumpIndexEpoch(db, admin, activeSite.key);
 
       // Sitemap is generated on the fly from Firestore by publishedSitemapXml.
       // robots.txt is static per Hosting target (Allow:/ + host Sitemap).
@@ -1148,6 +1159,7 @@ contentengineApp.all(/.*/, async (req, res) => {
       if (slug) {
         try {
           await db.collection(activeSite.collection).doc(slug).delete();
+          await bumpIndexEpoch(db, admin, activeSite.key);
           console.log(
             `[contentengine] post.delete[${activeSite.key}]: removed ${slug} (dropped from sitemap on next request)`
           );
@@ -1298,7 +1310,7 @@ exports.servePublishedPage = onRequest(
       }
       const canonicalHref = publishedCanonicalUrl(targetPath, site);
       res.set("Content-Type", "text/html; charset=utf-8");
-      res.set("Cache-Control", "public, max-age=300");
+      res.set("Cache-Control", "public, max-age=60");
       res.set("Link", `<${canonicalHref}>; rel="canonical"`);
       res.status(200).send(html);
       return;

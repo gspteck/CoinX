@@ -1,13 +1,35 @@
 "use strict";
 
-/** Google AdSense publisher for all GSPTeck Content Engine sites. */
-const ADSENSE_PUBLISHER_ID = "ca-pub-6628299939568043";
+/** Google AdSense publisher ID. The adsbygoogle script is injected only on published post pages via withAdSenseOnPost. Homepage, /blog, /sitemap, policy, pricing, tools, author, 404 and other main pages must not load the script; they may include the google-adsense-account meta for site verification only. */
+const ADSENSE_PUBLISHER_ID = "ca-pub-1134522531752598";
 
 const ADSENSE_ACCOUNT_META =
   `<meta name="google-adsense-account" content="${ADSENSE_PUBLISHER_ID}">`;
 
 const ADSENSE_SCRIPT =
   `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}" crossorigin="anonymous"></script>`;
+
+
+/** Paths/slugs that must never receive the adsbygoogle script (main pages, not posts). */
+const ADSENSE_SCRIPT_DENIED_SLUGS = new Set([
+  "",
+  "index",
+  "blog",
+  "sitemap",
+  "policy",
+  "pricing",
+  "delete-account",
+  "thanks",
+]);
+
+function shouldLoadAdSenseScript(pathOrSlug) {
+  if (pathOrSlug == null) return true;
+  const raw = String(pathOrSlug).trim();
+  const slug = raw.replace(/^\/+/, "").replace(/\/+$/, "").replace(/\.html$/i, "").toLowerCase();
+  if (ADSENSE_SCRIPT_DENIED_SLUGS.has(slug)) return false;
+  if (slug.startsWith("tools/") || slug.startsWith("author/") || slug.startsWith("views/")) return false;
+  return true;
+}
 
 // Applied on published post responses only. Allows existing inline CSS/JS,
 // first-party assets, HTTPS images, and the Google AdSense endpoints.
@@ -46,7 +68,10 @@ function ensureAdSenseScriptInHead(html) {
 }
 
 /** Meta + Auto ads script. Use on published posts only, never landings. */
-function withAdSenseOnPost(html) {
+function withAdSenseOnPost(html, pathOrSlug) {
+  if (!shouldLoadAdSenseScript(pathOrSlug)) {
+    return ensureAdSenseAccountMeta(html);
+  }
   return ensureAdSenseScriptInHead(ensureAdSenseAccountMeta(html));
 }
 
@@ -54,6 +79,34 @@ function setAdSenseCsp(res) {
   if (res && typeof res.set === "function") {
     res.set("Content-Security-Policy", ADSENSE_CSP);
   }
+}
+
+
+function stripAdSense(html) {
+  if (!html || typeof html !== "string") return html;
+  return html
+    .replace(/\s*<meta\s+name=["']google-adsense-account["'][^>]*>/gi, "")
+    .replace(/\s*<script[^>]*pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js[^>]*>\s*<\/script>/gi, "");
+}
+
+/** coinx.gspteck.com is not in the AdSense ads.txt list; never add script or meta there. */
+function adsenseEnabledForSite(site) {
+  return !(site && site.key === "coinx");
+}
+
+function withAdSenseOnPostForSite(html, site, pathOrSlug) {
+  if (!adsenseEnabledForSite(site)) return stripAdSense(html);
+  return withAdSenseOnPost(html, pathOrSlug);
+}
+
+function ensureAdSenseAccountMetaForSite(html, site) {
+  if (!adsenseEnabledForSite(site)) return stripAdSense(html);
+  return ensureAdSenseAccountMeta(html);
+}
+
+function setAdSenseCspForSite(res, site, pathOrSlug) {
+  if (!adsenseEnabledForSite(site) || !shouldLoadAdSenseScript(pathOrSlug)) return;
+  setAdSenseCsp(res);
 }
 
 module.exports = {
@@ -65,4 +118,9 @@ module.exports = {
   ensureAdSenseScriptInHead,
   withAdSenseOnPost,
   setAdSenseCsp,
+  stripAdSense,
+  adsenseEnabledForSite,
+  withAdSenseOnPostForSite,
+  ensureAdSenseAccountMetaForSite,
+  setAdSenseCspForSite,
 };

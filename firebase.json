@@ -122,6 +122,19 @@
       ],
       "headers": [
         {
+          "source": "/ads.txt",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "text/plain; charset=utf-8"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
+            }
+          ]
+        },
+        {
           "source": "**/*.@(js|css|png|jpg|jpeg|gif|svg|ico|webp)",
           "headers": [
             {
@@ -280,6 +293,10 @@
           "region": "us-central1"
         },
         {
+          "source": "/ads.txt",
+          "destination": "/ads.txt"
+        },
+        {
           "source": "/**",
           "function": "servePublishedPage",
           "region": "us-central1"
@@ -297,6 +314,19 @@
         "sitemap.xml"
       ],
       "headers": [
+        {
+          "source": "/ads.txt",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "text/plain; charset=utf-8"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
+            }
+          ]
+        },
         {
           "source": "**/*.@(js|css|png|jpg|jpeg|gif|svg|ico|webp)",
           "headers": [
@@ -382,6 +412,10 @@
           "source": "/sitemap.xml",
           "function": "publishedSitemapXml",
           "region": "us-central1"
+        },
+        {
+          "source": "/ads.txt",
+          "destination": "/ads.txt"
         },
         {
           "source": "/**",

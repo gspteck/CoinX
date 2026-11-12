@@ -1,7 +1,7 @@
 "use strict";
 
 /** Google AdSense publisher ID. The adsbygoogle script is injected only on published post pages via withAdSenseOnPost. Homepage, /blog, /sitemap, policy, pricing, tools, author, 404 and other main pages must not load the script; they may include the google-adsense-account meta for site verification only. */
-const ADSENSE_PUBLISHER_ID = "ca-pub-1134522531752598";
+const ADSENSE_PUBLISHER_ID = "ca-pub-6628299939568043";
 
 const ADSENSE_ACCOUNT_META =
   `<meta name="google-adsense-account" content="${ADSENSE_PUBLISHER_ID}">`;
@@ -56,10 +56,29 @@ function injectHeadTag(html, tag, alreadyRe) {
 }
 
 function ensureAdSenseAccountMeta(html) {
+  if (!html || typeof html !== "string") return html;
+  if (/google-adsense-account/i.test(html)) {
+    return html
+      .replace(
+        /(<meta\b[^>]*\bname=["']google-adsense-account["'][^>]*\bcontent=["'])ca-pub-\d+(["'])/i,
+        `$1${ADSENSE_PUBLISHER_ID}$2`
+      )
+      .replace(
+        /(<meta\b[^>]*\bcontent=["'])ca-pub-\d+(["'][^>]*\bname=["']google-adsense-account["'])/i,
+        `$1${ADSENSE_PUBLISHER_ID}$2`
+      );
+  }
   return injectHeadTag(html, ADSENSE_ACCOUNT_META, /google-adsense-account/i);
 }
 
 function ensureAdSenseScriptInHead(html) {
+  if (!html || typeof html !== "string") return html;
+  if (/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/i.test(html)) {
+    return html.replace(
+      /(pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js\?client=)ca-pub-\d+/gi,
+      `$1${ADSENSE_PUBLISHER_ID}`
+    );
+  }
   return injectHeadTag(
     html,
     ADSENSE_SCRIPT,
@@ -89,9 +108,9 @@ function stripAdSense(html) {
     .replace(/\s*<script[^>]*pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js[^>]*>\s*<\/script>/gi, "");
 }
 
-/** coinx.gspteck.com is not in the AdSense ads.txt list; never add script or meta there. */
+/** coinx.gspteck.com is a gspteck.com subdomain, so gspteck.com/ads.txt covers it. AdSense is enabled on all three sites: verification meta on every page, adsbygoogle script on posts only. */
 function adsenseEnabledForSite(site) {
-  return !(site && site.key === "coinx");
+  return true;
 }
 
 function withAdSenseOnPostForSite(html, site, pathOrSlug) {

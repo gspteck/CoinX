@@ -1,0 +1,26 @@
+# CoinX
+
+> CoinX is GSPTeck's crypto projects hub, home of CoinDrop and Swappr, two free Android apps, plus plain-English guides on crypto exchanges, wallets and safety.
+
+coinx.gspteck.com is run by GSPTeck, giosaia's indie app studio. CoinX is not an exchange. It holds no balances, takes no deposits and promises no returns. It is not the Indonesian exchange Coinx (coinx.co.id) and not the exchange CoinEx.
+
+## Featured projects
+
+- [CoinDrop](https://coindrop.website): free Android app for crypto airdrops, community tasks and daily rewards (Google Play: com.gspteck.coindrop). Also presented on this site at https://coinx.gspteck.com/coindrop
+- [Swappr](https://swappr.website): free Android app to swap one crypto coin for another (Google Play: com.gspteck.swappr). Also presented on this site at https://coinx.gspteck.com/swappr
+
+## Official pages
+
+- [Home](https://coinx.gspteck.com/): projects hub and latest articles
+- [Market basics](https://coinx.gspteck.com/crypto-market-basics): introductory guides to crypto markets and exchanges
+- [Network fee estimator](https://coinx.gspteck.com/tools/network-fee-estimator): free tool for Ethereum gas and Bitcoin sat/vB
+- [Blog](https://coinx.gspteck.com/blog): all published articles
+- [Is CoinX legit?](https://coinx.gspteck.com/is-coinx-legit-coinx-gspteck-vs-coinx-exchange): who runs this site and how it differs from the Coinx exchange
+- [Sitemap](https://coinx.gspteck.com/sitemap)
+
+## Contact
+
+- Support: gspteck@gmail.com
+- Privacy policy: https://gspteck.com/policy
+- Account or data deletion: https://gspteck.com/delete-account
+- Maker: GSPTeck (https://gspteck.com)

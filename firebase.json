@@ -14,6 +14,32 @@
       ],
       "headers": [
         {
+          "source": "/llms.txt",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "text/plain; charset=utf-8"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
+            }
+          ]
+        },
+        {
+          "source": "/AGENTS.md",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "text/markdown; charset=utf-8"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
+            }
+          ]
+        },
+        {
           "source": "**/*.@(js|css|png|jpg|jpeg|gif|svg|ico|webp)",
           "headers": [
             {
@@ -104,6 +130,14 @@
           "region": "us-central1"
         },
         {
+          "source": "/llms.txt",
+          "destination": "/llms.txt"
+        },
+        {
+          "source": "/AGENTS.md",
+          "destination": "/AGENTS.md"
+        },
+        {
           "source": "/**",
           "function": "servePublishedPage",
           "region": "us-central1"
@@ -127,6 +161,32 @@
             {
               "key": "Content-Type",
               "value": "text/plain; charset=utf-8"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
+            }
+          ]
+        },
+        {
+          "source": "/llms.txt",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "text/plain; charset=utf-8"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
+            }
+          ]
+        },
+        {
+          "source": "/AGENTS.md",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "text/markdown; charset=utf-8"
             },
             {
               "key": "Cache-Control",
@@ -297,6 +357,14 @@
           "destination": "/ads.txt"
         },
         {
+          "source": "/llms.txt",
+          "destination": "/llms.txt"
+        },
+        {
+          "source": "/AGENTS.md",
+          "destination": "/AGENTS.md"
+        },
+        {
           "source": "/**",
           "function": "servePublishedPage",
           "region": "us-central1"
@@ -320,6 +388,32 @@
             {
               "key": "Content-Type",
               "value": "text/plain; charset=utf-8"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
+            }
+          ]
+        },
+        {
+          "source": "/llms.txt",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "text/plain; charset=utf-8"
+            },
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=3600"
+            }
+          ]
+        },
+        {
+          "source": "/AGENTS.md",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "text/markdown; charset=utf-8"
             },
             {
               "key": "Cache-Control",
@@ -416,6 +510,14 @@
         {
           "source": "/ads.txt",
           "destination": "/ads.txt"
+        },
+        {
+          "source": "/llms.txt",
+          "destination": "/llms.txt"
+        },
+        {
+          "source": "/AGENTS.md",
+          "destination": "/AGENTS.md"
         },
         {
           "source": "/**",

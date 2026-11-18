@@ -1,0 +1,26 @@
+# Swappr
+
+> Swappr is a free Android app for simple multi-coin crypto swaps: pick the pair, check the estimated amount and limits, add your address and confirm. No exchange terminal needed.
+
+Swappr is made by GSPTeck, giosaia's indie studio, and is a CoinX project. It is listed on Google Play as "Swappr: Crypto Coin Swap" (package com.gspteck.swappr). Swaps are processed by FixedFloat. The app never asks for a seed phrase and does not store a balance for you. While an order runs, coins sit at a FixedFloat deposit address. Swappr is currently available only for Android on Google Play.
+
+## Cost
+
+The app is free to install, shows ads, and has no in-app purchases. A swap is not free: it carries the swap provider's fee plus the blockchain network fee. As published on this site (fees last checked 2026-11-13), FixedFloat charges 1% plus the network fee on a fixed rate and 0.5% plus the network fee on a float rate, and the app shows the amount you will receive before you confirm. Sending the deposit from your own wallet also costs that chain's network fee.
+
+## Official pages
+
+- [Home](https://swappr.website/): how a swap works, features, FAQ and latest articles
+- [Blog](https://swappr.website/blog): all published articles
+- [Is Swappr safe?](https://swappr.website/is-swappr-safe-legit-who-holds-your-coins): who makes it, who holds coins during a swap, and what it costs
+- [Is Swappr free? Fees explained](https://swappr.website/is-swappr-free-swap-fees-network-fees-explained-2026)
+- [Sitemap](https://swappr.website/sitemap)
+- [Google Play listing](https://play.google.com/store/apps/details?id=com.gspteck.swappr)
+- [CoinX hub](https://coinx.gspteck.com/)
+
+## Contact
+
+- Support: gspteck@gmail.com
+- Privacy policy: https://gspteck.com/policy
+- Account or data deletion: https://gspteck.com/delete-account
+- Maker: GSPTeck (https://gspteck.com)

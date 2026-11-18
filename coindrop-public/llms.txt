@@ -1,0 +1,28 @@
+# CoinDrop
+
+> CoinDrop is a free Android app for earning crypto daily: claim airdrop rewards with one tap, complete simple tasks, refer friends and unlock Premium perks. Not coindrop.in.
+
+CoinDrop, a CoinX project by GSPTeck, is published on Google Play as com.gspteck.coindrop. The official website is coindrop.website. CoinDrop is not coindrop.in, which is a separate, unrelated site.
+
+The official Solana mint address published on the homepage is mntq6hnGWU9761TRZdzeAkhTmAuTUKRQqZe1D7787UV.
+
+## What the app does
+
+- Claim daily crypto rewards with one tap of a button.
+- Complete simple tasks to earn more.
+- Contribute to development and refer friends for extra rewards.
+- Optional Premium membership: 100x button click rewards, secondary tokens, and infinite energy (no recovery wait). The free plan has 1x button click rewards, no secondary tokens, and 3 second energy recovery.
+- A Premium price is not published on this site.
+
+## Official pages
+
+- [Home](https://coindrop.website/): what CoinDrop does, membership comparison and latest articles
+- [Blog](https://coindrop.website/blog): all published articles
+- [Airdrop safety guide](https://coindrop.website/airdrop-safety-guide-hub-2026)
+- [Ways to earn crypto](https://coindrop.website/ways-to-earn-crypto-guide-hub-2026)
+- [Airdrop gas fee budget calculator](https://coindrop.website/airdrop-gas-fee-budget-calculator)
+- [5 rules for free token opportunities](https://coindrop.website/free-token-opportunities-in-cryptocurrency)
+- [Sitemap](https://coindrop.website/sitemap)
+- [Google Play listing](https://play.google.com/store/apps/details?id=com.gspteck.coindrop)
+- [CoinX hub](https://coinx.gspteck.com/)
+- [GSPTeck](https://gspteck.com/)
